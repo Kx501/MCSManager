@@ -471,6 +471,8 @@
   "TXT_CODE_3aa9f36": "Illegal characters detected in the file name for compression or decompression, please rename and change the file!",
   "TXT_CODE_3ae0276b": "Please enter the access password for the game server's RCON protocol, usually found in the configuration file.",
   "TXT_CODE_3aec94fb": "ZIP file decompression failed. Possible reasons:\n1. File is corrupted or password-protected\n2. If this is a multi-volume archive (zip+z01+z02, etc.), 7zip support needs to be enabled\n3. Incorrect file format\nPlease check the file or contact the administrator to enable 7zip functionality for better archive support.",
+  "TXT_CODE_schedule_enabled_success": "Scheduled task enabled successfully",
+  "TXT_CODE_schedule_disabled_success": "Scheduled task disabled successfully",
   "TXT_CODE_3b1bb444": "Min",
   "TXT_CODE_3b1cc020": "Cancel",
   "TXT_CODE_3b24a247": "Click the Save button in the upper right corner to save the layout design.",
@@ -550,6 +552,7 @@
   "TXT_CODE_41dd4d19": "Official Website",
   "TXT_CODE_41f86ac": "User <<operator_name>> deleted the task <<task_name>> of the <<instance_name>> instance",
   "TXT_CODE_42036f92": "------ User Login Event ------",
+  "TXT_CODE_42036f93": "User <<operator_name>> <<enabled_status>> the task <<task_name>> of the <<instance_name>> instance",
   "TXT_CODE_42a7759b": "The suffix that shows up on the playerlist after someone's name when they're AFK",
   "TXT_CODE_42bcfe0c": "Terminal initialization failed, please refresh the web page and try again!",
   "TXT_CODE_42e25bc2": "Setting this to false allows RNG manipulation. Paper patches RNG manipulation by using a shared (and locked) random source. This comes with a performance gain, but technical players may prefer to turn this off for the ability to manipulate RNG.",
@@ -2796,5 +2799,9 @@
   "TXT_CODE_8036ea5e": "No mapping is set.",
   "TXT_CODE_8d8fbbf4": "Add a mapping",
   "TXT_CODE_93c3cb78": "For this address to work, you may need to configure node direct connection mappings.",
-  "TXT_CODE_48c291c1": "Remote mappings are not available. This may be caused by an outdated panel backend."
+  "TXT_CODE_48c291c1": "Remote mappings are not available. This may be caused by an outdated panel backend.",
+  "TXT_CODE_general_start.windowsBatchFile": "Detected Windows batch file {{commandExeFile}}, enabled shell mode to be compatible with Node.js security patch",
+  "TXT_CODE_general_start.windowsBatchFileShell": "Windows batch file startup parameters: {{spawnOptions}}",
+  "TXT_CODE_schedule_toggle_failed": "Schedule toggle failed, please try again later",
+  "TXT_CODE_schedule_toggle_error": "An error occurred while toggling the schedule"
 }

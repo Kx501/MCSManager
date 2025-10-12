@@ -70,7 +70,8 @@ const newTaskOrigin: ScheduleTaskForm = {
   payload: "",
   weekend: [],
   cycle: ["0", "0", "0"],
-  objTime: dayjs()
+  objTime: dayjs(),
+  enabled: true
 };
 
 let newTask = reactive<ScheduleTaskForm>(_.cloneDeep(newTaskOrigin));

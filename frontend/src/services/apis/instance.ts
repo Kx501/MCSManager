@@ -456,6 +456,23 @@ export const scheduleCreate = useDefineApi<
   method: "POST"
 });
 
+export const scheduleToggle = useDefineApi<
+  {
+    params: {
+      daemonId: string;
+      uuid: string;
+      task_name: string;
+    };
+    data: {
+      enabled: boolean;
+    };
+  },
+  boolean
+>({
+  url: "/api/protected_schedule",
+  method: "PUT"
+});
+
 export const reinstallInstance = useDefineApi<
   {
     params: {

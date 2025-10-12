@@ -471,6 +471,8 @@
   "TXT_CODE_3aa9f36": "压缩或解压的文件名中包含非法字符，请重命名更改文件！",
   "TXT_CODE_3ae0276b": "请输入游戏服务器 RCON 协议访问密码，这通常在配置文件存在相关内容。",
   "TXT_CODE_3aec94fb": "ZIP文件解压失败。可能的原因：\n1. 文件损坏或密码保护\n2. 如果这是分卷压缩包(zip+z01+z02等)，需要启用7zip支持\n3. 文件格式不正确\n请检查文件或联系管理员启用7zip功能以获得更好的压缩包支持。",
+  "TXT_CODE_schedule_enabled_success": "定时任务启用成功",
+  "TXT_CODE_schedule_disabled_success": "定时任务禁用成功",
   "TXT_CODE_3b1bb444": "分钟",
   "TXT_CODE_3b1cc020": "放弃",
   "TXT_CODE_3b24a247": "点击右上角的保存按钮即可保存布局设计。",
@@ -550,6 +552,7 @@
   "TXT_CODE_41dd4d19": "官方网站",
   "TXT_CODE_41f86ac": "用户 <<operator_name>> 删除了 <<instance_name>> 实例的任务 <<task_name>>",
   "TXT_CODE_42036f92": "------ 用户登录事件 ------",
+  "TXT_CODE_42036f93": "用户 <<operator_name>> <<enabled_status>>了 <<instance_name>> 实例的任务 <<task_name>>",
   "TXT_CODE_42a7759b": "玩家在AFK时显示于玩家列表名字后的后缀",
   "TXT_CODE_42bcfe0c": "终端初始化失败，请刷新网页重试！",
   "TXT_CODE_42e25bc2": "设为false允许RNG操作。Paper通过共享锁定的随机源修补RNG操作。这提升性能，但有些玩家可能选择关闭此功能操纵RNG。",
@@ -2797,5 +2800,9 @@
   "TXT_CODE_8d8fbbf4": "添加一条映射",
   "TXT_CODE_497568db": "设置用户从不同地址访问面板时直连节点使用的地址，在节点使用反向代理暴露时很有用。",
   "TXT_CODE_93c3cb78": "为使此地址正常工作，可能需要配置节点直连映射。",
-  "TXT_CODE_48c291c1": "地址映射不可用。这可能是面板后端未更新导致的。"
+  "TXT_CODE_48c291c1": "地址映射不可用。这可能是面板后端未更新导致的。",
+  "TXT_CODE_general_start.windowsBatchFile": "检测到 Windows 批处理文件 {{commandExeFile}}，已启用 shell 模式以兼容 Node.js 安全补丁",
+  "TXT_CODE_general_start.windowsBatchFileShell": "Windows 批处理文件启动参数: {{spawnOptions}}",
+  "TXT_CODE_schedule_toggle_failed": "定时任务切换失败，请稍后重试",
+  "TXT_CODE_schedule_toggle_error": "定时任务切换时发生错误"
 }

@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from "child_process";
 import EventEmitter from "events";
 import fs from "fs-extra";
 import { killProcess } from "mcsmanager-common";
+import os from "os";
 import { $t } from "../../../i18n";
 import logger from "../../../service/log";
 import Instance from "../../instance/instance";
@@ -91,8 +92,8 @@ export default class GeneralStartCommand extends AbsStartCommand {
       instance.println("INFO", $t("TXT_CODE_ba09da46", { name: runAsConfig.runAsName }));
     }
 
-    // create child process
-    const subProcess = spawn(commandExeFile, commandParameters, {
+    // Check if we need shell mode for Windows batch files
+    const spawnOptions: any = {
       ...runAsConfig,
       cwd: instance.absoluteCwdPath(),
       stdio: "pipe",
@@ -102,7 +103,22 @@ export default class GeneralStartCommand extends AbsStartCommand {
       // otherwise, an abnormal exit of the parent process may cause the child process to continue running,
       // leading to an abnormal instance state.
       detached: false
-    });
+    };
+
+    // For Windows platform, check if the command is a batch file (.bat or .cmd)
+    // Node.js security update (CVE‑2024‑27980) requires explicit shell mode for batch files
+    if (os.platform() === "win32") {
+      const isBatchFile = commandExeFile.toLowerCase().endsWith(".bat") || 
+                         commandExeFile.toLowerCase().endsWith(".cmd");
+      
+      if (isBatchFile) {
+        logger.info($t("TXT_CODE_general_start.batchFileDetected", { file: commandExeFile }));
+        spawnOptions.shell = true;
+      }
+    }
+
+    // create child process
+    const subProcess = spawn(commandExeFile, commandParameters, spawnOptions);
 
     // child process creation result check
     if (!subProcess || !subProcess.pid) {

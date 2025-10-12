@@ -1,11 +1,52 @@
 import { t } from "@/lang/i18n";
-import { scheduleCreate, scheduleDelete, scheduleList } from "@/services/apis/instance";
+import { scheduleCreate, scheduleDelete, scheduleList, scheduleToggle } from "@/services/apis/instance";
 import { reportErrorMsg } from "@/tools/validator";
 import type { ScheduleTaskForm } from "@/types";
 import { message, notification } from "ant-design-vue";
 import dayjs from "dayjs";
 
 export function useSchedule(instanceId: string, daemonId: string) {
+  const toggleScheduleTask = async (name: string, enabled: boolean) => {
+    try {
+      const { execute, isLoading } = scheduleToggle();
+      const result = await execute({
+        params: {
+          daemonId: daemonId ?? "",
+          uuid: instanceId ?? "",
+          task_name: name
+        },
+        data: {
+          enabled
+        }
+      });
+      
+      // Wait for API response to complete
+      if (result.value === true) {
+        message.success(
+          enabled
+            ? t("TXT_CODE_schedule_enabled_success")
+            : t("TXT_CODE_schedule_disabled_success")
+        );
+        
+        // Add a short delay to ensure backend state is updated
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Force refresh task list
+        await getScheduleList();
+        
+        return true;
+      } else {
+        // API call succeeded but returned false, possibly backend processing failed
+        message.error(t("TXT_CODE_schedule_toggle_failed"));
+        return false;
+      }
+    } catch (err: any) {
+      console.error(err);
+      reportErrorMsg(err.message || t("TXT_CODE_schedule_toggle_error"));
+      return false;
+    }
+  };
+
   const createTaskTypeInterval = async (newTask: ScheduleTaskForm) => {
     const arr = newTask.cycle;
     let ps = Number(arr[0]);
@@ -76,7 +117,7 @@ export function useSchedule(instanceId: string, daemonId: string) {
   };
 
   const parseTaskTime = (time: string) => {
-    const regex = /(\d+) (\d+) (\d+) (\d+) (\d+) \*/; // 匹配 time 格式
+    const regex = /(\d+) (\d+) (\d+) (\d+) (\d+) \*/; // Match time format
     const match = time.match(regex);
     let objTime = dayjs();
     if (match) {
@@ -168,6 +209,7 @@ export function useSchedule(instanceId: string, daemonId: string) {
     scheduleListLoading,
     schedules,
 
-    deleteSchedule
+    deleteSchedule,
+    toggleScheduleTask
   };
 }

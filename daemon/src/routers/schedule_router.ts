@@ -22,3 +22,13 @@ routerApp.on("schedule/delete", (ctx, data) => {
   InstanceControlSubsystem.deleteScheduleTask(data.instanceUuid, data.name);
   protocol.response(ctx, true);
 });
+
+// toggle task enabled/disabled status
+routerApp.on("schedule/toggle", (ctx, data) => {
+  try {
+    InstanceControlSubsystem.toggleScheduleTask(data.instanceUuid, data.name, data.enabled);
+    protocol.response(ctx, true);
+  } catch (error: any) {
+    protocol.responseError(ctx, error);
+  }
+});

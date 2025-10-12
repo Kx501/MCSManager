@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import { t, t as $t } from "@/lang/i18n";
 import { message } from "ant-design-vue";
-import { DeleteOutlined, EditOutlined, FieldTimeOutlined } from "@ant-design/icons-vue";
+import { DeleteOutlined, EditOutlined, FieldTimeOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons-vue";
 import CardPanel from "@/components/CardPanel.vue";
 import BetweenMenus from "@/components/BetweenMenus.vue";
 import { useLayoutCardTools } from "@/hooks/useCardTools";
@@ -25,10 +25,12 @@ const instanceId = getMetaOrRouteValue("instanceId");
 const daemonId = getMetaOrRouteValue("daemonId");
 const { toPage } = useAppRouters();
 const newScheduleDialog = ref<InstanceType<typeof NewSchedule>>();
-const { getScheduleList, schedules, scheduleListLoading, deleteSchedule } = useSchedule(
+const { getScheduleList, schedules, scheduleListLoading, deleteSchedule, toggleScheduleTask } = useSchedule(
   String(instanceId),
   String(daemonId)
 );
+
+const toggleLoadingMap = ref<Record<string, boolean>>({});
 
 const timeRender = (text: string, schedule: Schedule) => {
   const formatFunctions = {
@@ -109,6 +111,29 @@ const columns: AntColumnsType[] = [
   }
 ];
 
+const handleToggleScheduleTask = async (taskName: string, enabled: boolean) => {
+  toggleLoadingMap.value[taskName] = true;
+  try {
+    const success = await toggleScheduleTask(taskName, enabled);
+    if (success) {
+      // Update local state
+      const task = schedules.value?.find(s => s.name === taskName);
+      if (task) {
+        task.enabled = enabled;
+      }
+    } else {
+      // If API call fails, restore switch state
+      await getScheduleList();
+    }
+  } catch (error) {
+    console.error("Toggle schedule task failed:", error);
+    // Restore switch state
+    await getScheduleList();
+  } finally {
+    toggleLoadingMap.value[taskName] = false;
+  }
+};
+
 const refresh = async () => {
   await getScheduleList();
   message.success(t("TXT_CODE_fbde647e"));
@@ -167,6 +192,19 @@ onMounted(async () => {
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'actions'">
+                    <a-switch
+                      class="mr-8"
+                      :checked="record.enabled"
+                      @change="(checked) => handleToggleScheduleTask(record.name, !!checked)"
+                      :loading="toggleLoadingMap[record.name]"
+                    >
+                      <template #checkedChildren>
+                        <CheckOutlined />
+                      </template>
+                      <template #unCheckedChildren>
+                        <CloseOutlined />
+                      </template>
+                    </a-switch>
                     <a-button
                       class="mr-8"
                       size="large"
