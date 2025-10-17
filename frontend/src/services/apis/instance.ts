@@ -151,6 +151,7 @@ export const updateInstanceConfig = useDefineApi<
       eventTask?: {
         autoRestart: boolean;
         autoStart: boolean;
+        autoStartDelaySeconds?: number;
       };
       pingConfig?: {
         ip?: string;

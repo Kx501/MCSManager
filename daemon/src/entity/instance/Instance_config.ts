@@ -50,7 +50,9 @@ export default class InstanceConfig implements IGlobalInstanceConfig {
   public eventTask = {
     autoStart: false,
     autoRestart: false,
-    ignore: false
+    ignore: false,
+    // Auto start delay in seconds. Default 10s to keep backward compatibility
+    autoStartDelaySeconds: 10
   };
 
   // Extend
