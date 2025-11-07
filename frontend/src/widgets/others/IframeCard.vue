@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import { $t as t } from "@/lang/i18n";
-import { useAppToolsStore } from "@/stores/useAppToolsStore";
-import { useLayoutContainerStore } from "@/stores/useLayoutContainerStore";
 import CardPanel from "@/components/CardPanel.vue";
 import IconBtn from "@/components/IconBtn.vue";
-import type { LayoutCard } from "@/types/index";
-import { Empty } from "ant-design-vue";
-import { FullscreenOutlined, FullscreenExitOutlined } from "@ant-design/icons-vue";
 import { useLayoutCardTools } from "@/hooks/useCardTools";
-import { computed } from "vue";
+import { $t as t } from "@/lang/i18n";
+import { useAppConfigStore } from "@/stores/useAppConfigStore";
+import { useAppToolsStore } from "@/stores/useAppToolsStore";
+import { useLayoutContainerStore } from "@/stores/useLayoutContainerStore";
+import type { LayoutCard } from "@/types/index";
+import { FullscreenExitOutlined, FullscreenOutlined } from "@ant-design/icons-vue";
+import { Empty } from "ant-design-vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
   card: LayoutCard;
@@ -21,6 +21,7 @@ const { containerState } = useLayoutContainerStore();
 const urlSrc = ref(getMetaValue("url", ""));
 const fullCard = computed(() => getMetaValue("full"));
 const { openInputDialog } = useAppToolsStore();
+const { isDarkTheme } = useAppConfigStore();
 
 const editImgSrc = async () => {
   try {
@@ -36,15 +37,43 @@ const toggleFullCard = () => {
   setMetaValue("full", !fullCard.value);
 };
 
+// Send theme information to iframe
+const sendThemeToIframe = () => {
+  if (!myIframe.value?.contentWindow) return;
+  
+  const theme = isDarkTheme() ? "dark" : "light";
+  try {
+    myIframe.value.contentWindow.postMessage(
+      {
+        type: "MCSManagerThemeChange",
+        theme: theme
+      },
+      "*"
+    );
+  } catch (error) {
+    console.error("Failed to send theme message to iframe:", error);
+  }
+};
+
+// Watch theme changes
+watch(
+  () => isDarkTheme(),
+  () => {
+    // Send theme information to iframe when theme changes
+    sendThemeToIframe();
+  }
+);
+
+// Handle iframe load event
+const handleIframeLoad = () => {
+  myIframeLoading.value = false;
+  sendThemeToIframe();
+};
+
 onMounted(() => {
   watch([urlSrc, myIframe], () => {
     try {
       myIframeLoading.value = true;
-      if (myIframe.value) {
-        myIframe.value.onload = () => {
-          myIframeLoading.value = false;
-        };
-      }
     } catch (error: any) {
       console.error(error);
     }
@@ -94,6 +123,7 @@ onMounted(() => {
           frameborder="0"
           marginwidth="0"
           marginheight="0"
+          @load="handleIframeLoad"
         ></iframe>
       </template>
     </CardPanel>

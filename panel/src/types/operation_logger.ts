@@ -14,6 +14,7 @@ export enum OperationLoggerAction {
   InstanceFileDelete = "instance_file_delete",
   InstanceTaskCreate = "instance_task_create",
   InstanceTaskDelete = "instance_task_delete",
+  InstanceTaskToggle = "instance_task_toggle",
   DaemonCreate = "daemon_create",
   DaemonRemove = "daemon_remove",
   DaemonConfigChange = "daemon_config_change",
@@ -106,6 +107,12 @@ export type InstanceTaskDeleteOptions = {
   task_name: string;
 } & InstanceGeneralOptions;
 
+export type InstanceTaskToggleOptions = {
+  type: "instance_task_toggle";
+  task_name: string;
+  enabled: boolean;
+} & InstanceGeneralOptions;
+
 export type DaemonCreateOptions = {
   type: "daemon_create";
   daemon_id: string;
@@ -160,6 +167,7 @@ export type OperationLoggerItem =
   | InstanceFileDeleteOptions
   | InstanceTaskCreateOptions
   | InstanceTaskDeleteOptions
+  | InstanceTaskToggleOptions
   | DaemonCreateOptions
   | DaemonRemoveOptions
   | DaemonConfigChangeOptions

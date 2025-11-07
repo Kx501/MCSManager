@@ -8,9 +8,9 @@ import { useScreen } from "@/hooks/useScreen";
 import { t as $t, t } from "@/lang/i18n";
 import { padZero } from "@/tools/common";
 import { ScheduleActionType, ScheduleCreateType, ScheduleType } from "@/types/const";
-import type { LayoutCard, Schedule } from "@/types/index";
+import type { LayoutCard, Schedule, ScheduleAction } from "@/types/index";
 import NewSchedule from "@/widgets/instance/dialogs/NewSchedule.vue";
-import { DeleteOutlined, EditOutlined, FieldTimeOutlined } from "@ant-design/icons-vue";
+import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FieldTimeOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { onMounted, ref } from "vue";
 import type { AntColumnsType } from "../../types/ant";
@@ -25,10 +25,12 @@ const instanceId = getMetaOrRouteValue("instanceId");
 const daemonId = getMetaOrRouteValue("daemonId");
 const { toPage } = useAppRouters();
 const newScheduleDialog = ref<InstanceType<typeof NewSchedule>>();
-const { getScheduleList, schedules, scheduleListLoading, deleteSchedule } = useSchedule(
+const { getScheduleList, schedules, scheduleListLoading, deleteSchedule, toggleScheduleTask } = useSchedule(
   String(instanceId),
   String(daemonId)
 );
+
+const toggleLoadingMap = ref<Record<string, boolean>>({});
 
 const timeRender = (text: string, schedule: Schedule) => {
   const formatFunctions = {
@@ -65,8 +67,13 @@ const columns: AntColumnsType[] = [
   {
     align: "center",
     title: t("TXT_CODE_1544562"),
-    dataIndex: "payload",
-    key: "payload"
+    dataIndex: "actions",
+    key: "payload",
+    minWidth: 180,
+    customRender: (e: { text: ScheduleAction[] }) => {
+      if (!e.text || e.text.length === 0) return "-";
+      return e.text.map((action) => action.payload || "-").join(", ");
+    }
   },
   {
     align: "center",
@@ -79,11 +86,15 @@ const columns: AntColumnsType[] = [
   {
     align: "center",
     title: t("TXT_CODE_82fbc5ad"),
-    dataIndex: "action",
+    dataIndex: "actions",
     key: "action",
     minWidth: 180,
-    customRender: (e: { text: "delay" | "command" | "stop" | "start" | "restart" | "kill" }) =>
-      ScheduleActionType[e.text]
+    customRender: (e: { text: ScheduleAction[] }) => {
+      if (!e.text || e.text.length === 0) return "-";
+      return e.text
+        .map((action) => ScheduleActionType[action.type as keyof typeof ScheduleActionType] || action.type)
+        .join(", ");
+    }
   },
   {
     align: "center",
@@ -108,6 +119,29 @@ const columns: AntColumnsType[] = [
     minWidth: 180
   }
 ];
+
+const handleToggleScheduleTask = async (taskName: string, enabled: boolean) => {
+  toggleLoadingMap.value[taskName] = true;
+  try {
+    const success = await toggleScheduleTask(taskName, enabled);
+    if (success) {
+      // Update local state
+      const task = schedules.value?.find(s => s.name === taskName);
+      if (task) {
+        task.enabled = enabled;
+      }
+    } else {
+      // If API call fails, restore switch state
+      await getScheduleList();
+    }
+  } catch (error) {
+    console.error("Toggle schedule task failed:", error);
+    // Restore switch state
+    await getScheduleList();
+  } finally {
+    toggleLoadingMap.value[taskName] = false;
+  }
+};
 
 const refresh = async () => {
   await getScheduleList();
@@ -167,6 +201,19 @@ onMounted(async () => {
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'actions'">
+                    <a-switch
+                      class="mr-8"
+                      :checked="record.enabled"
+                      @change="(checked) => handleToggleScheduleTask(record.name, !!checked)"
+                      :loading="toggleLoadingMap[record.name]"
+                    >
+                      <template #checkedChildren>
+                        <CheckOutlined />
+                      </template>
+                      <template #unCheckedChildren>
+                        <CloseOutlined />
+                      </template>
+                    </a-switch>
                     <a-button
                       class="mr-8"
                       size="large"

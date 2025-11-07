@@ -126,4 +126,43 @@ router.delete(
   }
 );
 
+// [Low-level Permission]
+// toggle scheduled task enabled/disabled status
+router.put(
+  "/",
+  permission({ level: ROLE.USER }),
+  validator({
+    query: { daemonId: String, uuid: String, task_name: String },
+    body: { enabled: Boolean }
+  }),
+  async (ctx) => {
+    try {
+      const daemonId = String(ctx.query.daemonId);
+      const instanceUuid = String(ctx.query.uuid);
+      const name = String(ctx.query.task_name);
+      const enabled = Boolean(ctx.request.body.enabled);
+
+      operationLogger.log("instance_task_toggle", {
+        operator_ip: ctx.ip,
+        operator_name: ctx.session?.["userName"],
+        instance_id: instanceUuid,
+        daemon_id: daemonId,
+        task_name: name,
+        enabled: enabled
+      });
+
+      ctx.body = await new RemoteRequest(RemoteServiceSubsystem.getInstance(daemonId)).request(
+        "schedule/toggle",
+        {
+          instanceUuid,
+          name,
+          enabled
+        }
+      );
+    } catch (err) {
+      ctx.body = err;
+    }
+  }
+);
+
 export default router;

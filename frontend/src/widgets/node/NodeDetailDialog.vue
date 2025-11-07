@@ -29,7 +29,8 @@ const DEFAULT_CONFIG = {
   portRangeEnd: 0,
   portAssignInterval: 0,
   daemonPort: 24444,
-  remoteMappings: [] as IPanelOverviewRemoteMappingResponse[]
+  remoteMappings: [] as IPanelOverviewRemoteMappingResponse[],
+  disabled: false
 };
 
 const SPEED_RATE_OPTIONS = [
@@ -98,7 +99,8 @@ const openDialog = (data?: ComputedNodeInfo, uuid?: string) => {
       port: data.port, // connection port
       daemonPort: data.config?.port ?? 24444, // listen port
       apiKey: "",
-      remoteMappings: data.remoteMappings ?? []
+      remoteMappings: data.remoteMappings ?? [],
+      disabled: (data.config as any)?.disabled ?? false
     };
   } else {
     editMode.value = false;
@@ -220,6 +222,15 @@ defineExpose({ openDialog });
               </a-typography-text>
             </a-typography-paragraph>
             <a-input v-model:value="dialog.data.prefix" />
+          </a-form-item>
+
+          <a-form-item :label="t('TXT_CODE_NODE_DISABLED')" name="disabled">
+            <a-typography-paragraph>
+              <a-typography-text type="secondary">
+                {{ t("TXT_CODE_NODE_DISABLED_DESC") }}
+              </a-typography-text>
+            </a-typography-paragraph>
+            <a-switch v-model:checked="dialog.data.disabled" />
           </a-form-item>
         </a-form>
       </a-tab-pane>

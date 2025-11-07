@@ -22,6 +22,7 @@ interface IScheduleTask {
   payload: string | undefined;
   actions: IScheduleAction[];
   type: number;
+  enabled: boolean;
 }
 
 // Scheduled task timer/periodic task interface
@@ -40,6 +41,7 @@ class TaskConfig implements IScheduleTask {
   payload: string | undefined = undefined;
   actions: IScheduleAction[] = [];
   type = 1;
+  enabled: boolean = true;
 }
 
 class IntervalJob implements IScheduleJob {
@@ -56,7 +58,7 @@ class IntervalJob implements IScheduleJob {
 
 // Scheduled task instance class
 class Task {
-  constructor(public config: TaskConfig, public job?: IScheduleJob) {}
+  constructor(public config: TaskConfig, public job?: IScheduleJob) { }
 }
 
 class InstanceControlSubsystem {
@@ -106,6 +108,18 @@ class InstanceControlSubsystem {
           task: JSON.stringify(task)
         })
       );
+
+    // If task is disabled, don't create the job
+    if (!task.enabled) {
+      const newTask = new Task(task);
+      this.taskMap.get(key)?.push(newTask);
+      if (needStore) {
+        StorageSubsystem.store("TaskConfig", `${key}_${newTask.config.name}`, newTask.config);
+      }
+      if (needStore)
+        logger.info($t("TXT_CODE_system_instance_control.crateSuccess", { name: task.name }));
+      return;
+    }
 
     let job: IScheduleJob;
 
@@ -249,6 +263,46 @@ class InstanceControlSubsystem {
     this.deleteTask(key, name);
   }
 
+  public toggleScheduleTask(instanceUuid: string, name: string, enabled: boolean) {
+    const key = `${instanceUuid}`;
+    const tasks = this.taskMap.get(key);
+    if (!tasks) {
+      throw new Error($t("TXT_CODE_system_instance_control.taskNotFound"));
+    }
+
+    let taskFound = false;
+    tasks.forEach((task) => {
+      if (task.config.name === name) {
+        taskFound = true;
+        task.config.enabled = enabled;
+
+        // If enabling, create the job if it doesn't exist
+        if (enabled && !task.job) {
+          try {
+            const newJob = this.createJob(task.config);
+            task.job = newJob;
+          } catch (error) {
+            // If job creation fails, revert the enabled state
+            task.config.enabled = false;
+            throw error;
+          }
+        }
+        // If disabling, cancel the job if it exists
+        else if (!enabled && task.job) {
+          task.job.cancel();
+          task.job = undefined;
+        }
+
+        // Update storage
+        StorageSubsystem.store("TaskConfig", `${key}_${name}`, task.config);
+      }
+    });
+
+    if (!taskFound) {
+      throw new Error($t("TXT_CODE_system_instance_control.taskNotFound"));
+    }
+  }
+
   private deleteTask(key: string, name: string) {
     this.taskMap.get(key)?.forEach((v, index, arr) => {
       if (v?.config?.name === name) {
@@ -265,6 +319,56 @@ class InstanceControlSubsystem {
       if (v.config.name === name) f = false;
     });
     return f;
+  }
+
+  private createJob(task: IScheduleTask): IScheduleJob {
+    let job: IScheduleJob;
+
+    // min interval check
+    if (task.type === 1) {
+      let internalTime = Number(task.time);
+      if (isNaN(internalTime) || internalTime < 1) internalTime = 1;
+
+      // task.type=1: Time interval scheduled task, implemented with built-in timer
+      job = new IntervalJob(() => {
+        this.action(task);
+        if (task.count === -1) return;
+        if (task.count === 1) {
+          job.cancel();
+          this.deleteTask(`${task.instanceUuid}`, task.name);
+        } else {
+          task.count--;
+          this.updateTaskConfig(`${task.instanceUuid}`, task.name, task);
+        }
+      }, internalTime);
+    } else {
+      // Expression validity check: 8 19 14 * * 1,2,3,4
+      const timeArray = task.time.split(" ");
+      const checkIndex = [0, 1, 2];
+      checkIndex.forEach((item) => {
+        if (isNaN(Number(timeArray[item])) && Number(timeArray[item]) >= 0) {
+          throw new Error(
+            $t("TXT_CODE_system_instance_control.crateTaskErr", {
+              name: task.name,
+              timeArray: timeArray
+            })
+          );
+        }
+      });
+      // task.type=2: Specify time-based scheduled tasks, implemented by node-schedule library
+      job = schedule.scheduleJob(task.time, () => {
+        this.action(task);
+        if (task.count === -1) return;
+        if (task.count === 1) {
+          job.cancel();
+          this.deleteTask(`${task.instanceUuid}`, task.name);
+        } else {
+          task.count--;
+          this.updateTaskConfig(`${task.instanceUuid}`, task.name, task);
+        }
+      });
+    }
+    return job;
   }
 
   private updateTaskConfig(key: string, name: string, data: IScheduleTask) {

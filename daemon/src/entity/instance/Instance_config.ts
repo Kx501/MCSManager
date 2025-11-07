@@ -51,7 +51,9 @@ export default class InstanceConfig implements IGlobalInstanceConfig {
     autoStart: false,
     autoRestart: false,
     autoRestartMaxTimes: -1,
-    ignore: false
+    ignore: false,
+    // Auto start delay in seconds. Default 10s to keep backward compatibility
+    autoStartDelaySeconds: 10
   };
 
   // Extend

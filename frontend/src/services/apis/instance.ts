@@ -152,6 +152,7 @@ export const updateInstanceConfig = useDefineApi<
         autoRestart: boolean;
         autoRestartMaxTimes: number;
         autoStart: boolean;
+        autoStartDelaySeconds?: number;
       };
       pingConfig?: {
         ip?: string;
@@ -455,6 +456,23 @@ export const scheduleCreate = useDefineApi<
 >({
   url: "/api/protected_schedule",
   method: "POST"
+});
+
+export const scheduleToggle = useDefineApi<
+  {
+    params: {
+      daemonId: string;
+      uuid: string;
+      task_name: string;
+    };
+    data: {
+      enabled: boolean;
+    };
+  },
+  boolean
+>({
+  url: "/api/protected_schedule",
+  method: "PUT"
 });
 
 export const reinstallInstance = useDefineApi<

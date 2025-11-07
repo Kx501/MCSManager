@@ -1,0 +1,27 @@
+[Unit]
+Description=MCSManager Daemon Service
+Documentation=https://docs.mcsmanager.com/
+After=network.target
+
+[Service]
+Type=simple
+User=USER_PLACEHOLDER
+Group=GROUP_PLACEHOLDER
+WorkingDirectory=/opt/mcsmanager/daemon
+ExecStart=/usr/bin/node --max-old-space-size=8192 --enable-source-maps /opt/mcsmanager/daemon/app.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mcsm-daemon
+
+# 环境变量
+Environment=NODE_ENV=production
+
+# 资源限制（可选，根据需要调整）
+# LimitNOFILE=65536
+# LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+

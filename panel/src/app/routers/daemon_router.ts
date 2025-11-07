@@ -117,7 +117,8 @@ router.post(
       port: parameter.port,
       ip: parameter.ip,
       prefix: parameter.prefix ?? "",
-      remarks: parameter.remarks ?? ""
+      remarks: parameter.remarks ?? "",
+      disabled: parameter.disabled ?? false
     });
 
     operationLogger.log("daemon_create", {
@@ -158,6 +159,10 @@ router.put(
       apiKey: parameter.apiKey,
       remarks: parameter.remarks,
       remoteMappings: parameter.remoteMappings ?? [],
+      // Note: disabled is passed without default value to follow RESTful pattern:
+      // - If provided, update the disabled state
+      // - If undefined, don't update this field (preserve existing state)
+      disabled: parameter.disabled,
     });
 
     operationLogger.log("daemon_config_change", {

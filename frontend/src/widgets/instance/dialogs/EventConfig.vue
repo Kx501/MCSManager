@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { t } from "@/lang/i18n";
-import type { InstanceDetail } from "@/types";
 import { updateInstanceConfig } from "@/services/apis/instance";
-import { message } from "ant-design-vue";
 import { reportErrorMsg } from "@/tools/validator";
+import type { InstanceDetail } from "@/types";
+import { message } from "ant-design-vue";
+import { ref } from "vue";
 
 const props = defineProps<{
   instanceInfo?: InstanceDetail;
@@ -92,6 +92,22 @@ defineExpose({
           </a-typography-text>
         </a-typography-paragraph>
         <a-switch v-model:checked="options.config.eventTask.autoStart" />
+      </a-form-item>
+
+      <a-form-item>
+        <a-typography-title :level="5">{{ t('TXT_CODE_efgcasda') }}</a-typography-title>
+        <a-typography-paragraph>
+          <a-typography-text type="secondary">
+            {{ t('TXT_CODE_efgcasfe') }}
+          </a-typography-text>
+        </a-typography-paragraph>
+        <a-input-number
+          v-model:value="(options.config.eventTask as any).autoStartDelaySeconds"
+          :min="0"
+          :step="1"
+          :precision="0"
+          style="width: 160px"
+        />
       </a-form-item>
     </a-form>
   </a-modal>

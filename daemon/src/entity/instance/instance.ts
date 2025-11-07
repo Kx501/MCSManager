@@ -237,6 +237,13 @@ export default class Instance extends EventEmitter {
       configureEntityParams(this.config.eventTask, cfg.eventTask, "autoRestart", Boolean);
       configureEntityParams(this.config.eventTask, cfg.eventTask, "autoRestartMaxTimes", Number);
       configureEntityParams(this.config.eventTask, cfg.eventTask, "ignore", Boolean);
+      // Allow updating the auto-start delay (in seconds) from external parameters
+      configureEntityParams(
+        this.config.eventTask,
+        cfg.eventTask,
+        "autoStartDelaySeconds",
+        Number
+      );
     }
     if (cfg.terminalOption) {
       configureEntityParams(this.config.terminalOption, cfg.terminalOption, "haveColor", Boolean);

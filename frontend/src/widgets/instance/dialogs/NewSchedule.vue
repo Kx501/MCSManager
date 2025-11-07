@@ -75,7 +75,8 @@ const defaultTask: ScheduleTaskForm = {
   actions: [_.clone(defaultAction)],
   weekend: [],
   cycle: ["0", "0", "0"],
-  objTime: dayjs()
+  objTime: dayjs(),
+  enabled: true
 };
 
 let newTask = reactive<ScheduleTaskForm>(_.cloneDeep(defaultTask));

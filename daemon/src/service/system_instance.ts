@@ -45,26 +45,27 @@ class InstanceSubsystem extends EventEmitter {
     await sleep(1000 * 5);
     for (const instance of this.instances.values()) {
       if (instance.config.eventTask.autoStart && instance.status() == Instance.STATUS_STOP) {
-        instance
-          .execPreset("start")
-          .then(() => {
-            logger.info(
-              $t("TXT_CODE_system_instance.autoStart", {
-                name: instance.config.nickname,
-                uuid: instance.instanceUuid
-              })
-            );
-          })
-          .catch((reason) => {
-            logger.error(
-              $t("TXT_CODE_system_instance.autoStartErr", {
-                name: instance.config.nickname,
-                uuid: instance.instanceUuid,
-                reason: reason
-              })
-            );
-          });
-        await sleep(1000 * 5);
+        setTimeout(() => {
+          instance
+            .execPreset("start")
+            .then(() => {
+              logger.info(
+                $t("TXT_CODE_system_instance.autoStart", {
+                  name: instance.config.nickname,
+                  uuid: instance.instanceUuid
+                })
+              );
+            })
+            .catch((reason) => {
+              logger.error(
+                $t("TXT_CODE_system_instance.autoStartErr", {
+                  name: instance.config.nickname,
+                  uuid: instance.instanceUuid,
+                  reason: reason
+                })
+              );
+            });
+        }, 1000 * 10);
       }
     }
   }
@@ -83,8 +84,8 @@ class InstanceSubsystem extends EventEmitter {
         // All instances are all function schedulers
         instance
           .forceExec(new FunctionDispatcher())
-          .then((v) => {})
-          .catch((v) => {});
+          .then((v) => { })
+          .catch((v) => { });
         this.addInstance(instance);
       } catch (error: any) {
         logger.error(
@@ -216,7 +217,7 @@ class InstanceSubsystem extends EventEmitter {
       this.instances.delete(instanceUuid);
       StorageSubsystem.delete("InstanceConfig", instanceUuid);
       InstanceControl.deleteInstanceAllTask(instanceUuid);
-      if (deleteFile) fs.remove(instance.absoluteCwdPath(), (err) => {});
+      if (deleteFile) fs.remove(instance.absoluteCwdPath(), (err) => { });
       return true;
     }
     throw new Error($t("TXT_CODE_3bfb9e04"));
@@ -225,7 +226,7 @@ class InstanceSubsystem extends EventEmitter {
   forward(targetInstanceUuid: string, socket: Socket) {
     try {
       this.instanceStream.requestForward(socket, targetInstanceUuid);
-    } catch (err) {}
+    } catch (err) { }
   }
 
   stopForward(targetInstanceUuid: string, socket: Socket) {
@@ -234,7 +235,7 @@ class InstanceSubsystem extends EventEmitter {
       if (!instance) throw new Error($t("TXT_CODE_3bfb9e04"));
       instance.watchers.delete(socket.id);
       this.instanceStream.cannelForward(socket, targetInstanceUuid);
-    } catch (err) {}
+    } catch (err) { }
   }
 
   forEachForward(instanceUuid: string, callback: (socket: Socket) => void) {

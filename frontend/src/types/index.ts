@@ -229,6 +229,7 @@ export interface Schedule {
   time: string;
   actions: ScheduleAction[];
   type: number;
+  enabled: boolean;
 }
 
 export interface ScheduleAction {
@@ -241,6 +242,7 @@ export interface NewScheduleTask {
   count: number;
   time: string;
   type: ScheduleCreateType;
+  enabled: boolean;
 }
 
 export interface ScheduleTaskForm extends NewScheduleTask {

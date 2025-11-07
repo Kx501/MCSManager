@@ -436,6 +436,7 @@ router.put(
       const eventTask = {
         autoStart: toBoolean(config.eventTask?.autoStart),
         autoRestart: toBoolean(config.eventTask?.autoRestart),
+        autoStartDelaySeconds: toNumber(config.eventTask?.autoStartDelaySeconds),
         autoRestartMaxTimes: toNumber(config.eventTask?.autoRestartMaxTimes)
       };
 

@@ -37,6 +37,11 @@ router.get("/", permission({ level: ROLE.ADMIN, token: false }), async (ctx) => 
       remoteInfo.available = remoteService.available;
       remoteInfo.remarks = remoteService.config.remarks;
       remoteInfo.remoteMappings = remoteService.config.remoteMappings;
+      // Ensure config object exists and include disabled field
+      if (!remoteInfo.config) {
+        remoteInfo.config = {};
+      }
+      remoteInfo.config.disabled = remoteService.config.disabled ?? false;
       return remoteInfo;
     }
   );
