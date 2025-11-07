@@ -100,86 +100,147 @@ function Main {
     Test-NodeJS
     Write-Host ""
     
-    # Step 1: Clone repository
-    Write-Info "Step 1/6: Cloning repository..."
-    if (-not (Test-Path $BUILD_DIR)) {
-        New-Item -ItemType Directory -Path $BUILD_DIR -Force | Out-Null
-    }
-    Set-Location $BUILD_DIR
+    # Step 1: Check repository
+    Write-Info "Step 1/6: Checking repository..."
+    $currentDir = Get-Location
+    $isMCSManagerRepo = $false
+    $repoPath = $null
     
-    if (-not (Test-Path "MCSManager")) {
-        Write-Info "Cloning repository..."
-        git clone $REPO_URL
+    # Check if current directory is MCSManager repository
+    if ((Test-Path ".git") -and (Test-Path "package.json") -and (Test-Path "daemon") -and (Test-Path "panel") -and (Test-Path "frontend")) {
+        Write-Info "Detected MCSManager repository in current directory: $currentDir"
+        $isMCSManagerRepo = $true
+        $repoPath = $currentDir
+    }
+    # Check if MCSManager subdirectory exists in current directory
+    elseif (Test-Path "MCSManager\.git") {
+        Write-Info "Detected MCSManager repository in subdirectory: $currentDir\MCSManager"
+        $isMCSManagerRepo = $true
+        $repoPath = Join-Path $currentDir "MCSManager"
+    }
+    # Check if BUILD_DIR\MCSManager exists
+    elseif (Test-Path "$BUILD_DIR\MCSManager\.git") {
+        Write-Info "Detected MCSManager repository in: $BUILD_DIR\MCSManager"
+        $isMCSManagerRepo = $true
+        $repoPath = Join-Path $BUILD_DIR "MCSManager"
+    }
+    
+    if ($isMCSManagerRepo) {
+        # Use existing repository
+        Set-Location $repoPath
+        Write-Info "Updating existing repository..."
+        git pull
+        Write-Info "Repository location: $(Get-Location)"
     }
     else {
-        Write-Info "Repository exists, updating..."
+        # Clone new repository
+        Write-Info "MCSManager repository not found. Cloning repository..."
+        if (-not (Test-Path $BUILD_DIR)) {
+            New-Item -ItemType Directory -Path $BUILD_DIR -Force | Out-Null
+        }
+        Set-Location $BUILD_DIR
+        
+        if (-not (Test-Path "MCSManager")) {
+            Write-Info "Cloning repository to: $BUILD_DIR\MCSManager"
+            git clone $REPO_URL
+        }
+        else {
+            Write-Info "Directory exists, updating..."
+            Set-Location "MCSManager"
+            git pull
+            Set-Location ..
+        }
         Set-Location "MCSManager"
-        git pull
-        Set-Location ..
+        Write-Info "Repository location: $(Get-Location)"
     }
-    Set-Location "MCSManager"
-    Write-Info "Repository location: $(Get-Location)"
+    
+    # Store repository root path for later use
+    $REPO_ROOT = Get-Location
     Write-Host ""
     
     # Step 2: Install npm dependencies
     Write-Info "Step 2/6: Installing npm dependencies..."
+    Set-Location $REPO_ROOT
     if (Test-Path "install-dependents.bat") {
         & .\install-dependents.bat
     }
     elseif (Test-Path "install-dependents.sh") {
         Write-Info "Installing dependencies directly with npm..."
-        Set-Location "daemon"
+        Set-Location "$REPO_ROOT\daemon"
         npm install --no-fund --no-audit
-        Set-Location "..\panel"
+        Set-Location "$REPO_ROOT\panel"
         npm install --no-fund --no-audit
-        Set-Location "..\frontend"
+        Set-Location "$REPO_ROOT\frontend"
         npm install --no-fund --no-audit
-        Set-Location ".."
+        Set-Location $REPO_ROOT
     }
     else {
         Write-Info "Installing dependencies directly with npm..."
-        Set-Location "daemon"
+        Set-Location "$REPO_ROOT\daemon"
         npm install --no-fund --no-audit
-        Set-Location "..\panel"
+        Set-Location "$REPO_ROOT\panel"
         npm install --no-fund --no-audit
-        Set-Location "..\frontend"
+        Set-Location "$REPO_ROOT\frontend"
         npm install --no-fund --no-audit
-        Set-Location ".."
+        Set-Location $REPO_ROOT
     }
     Write-Info "npm dependencies installation completed"
     Write-Host ""
     
-    # Step 3: Download binary dependencies
-    Write-Info "Step 3/6: Downloading Windows AMD64 binary dependencies..."
-    $libDir = "daemon\lib"
+    # Step 3: Download binary dependencies (if not already downloaded)
+    Write-Info "Step 3/6: Checking Windows AMD64 binary dependencies..."
+    Set-Location $REPO_ROOT
+    $libDir = "$REPO_ROOT\daemon\lib"
     if (-not (Test-Path $libDir)) {
         New-Item -ItemType Directory -Path $libDir -Force | Out-Null
     }
-    Set-Location $libDir
     
-    Download-File -Url "https://github.com/MCSManager/Zip-Tools/releases/latest/download/file_zip_windows_x64.exe" -OutputPath "file_zip_windows_x64.exe"
-    Download-File -Url "https://github.com/MCSManager/Zip-Tools/releases/latest/download/7z_windows_x64.exe" -OutputPath "7z_windows_x64.exe"
-    Download-File -Url "https://github.com/MCSManager/Zip-Tools/releases/latest/download/7z-extra-license.txt" -OutputPath "7z-extra-license.txt" -Required $false
-    Download-File -Url "https://github.com/MCSManager/Zip-Tools/releases/latest/download/7z-unix-license.txt" -OutputPath "7z-unix-license.txt" -Required $false
-    Download-File -Url "https://github.com/MCSManager/PTY/releases/download/latest/pty_windows_x64.exe" -OutputPath "pty_windows_x64.exe"
+    $filesToCheck = @(
+        @{Name = "file_zip_win32_x64.exe"; Url = "https://github.com/MCSManager/Zip-Tools/releases/download/latest/file_zip_win32_x64.exe" },
+        @{Name = "7z_win32_x64.exe"; Url = "https://github.com/MCSManager/Zip-Tools/releases/download/latest/7z_win32_x64.exe" },
+        @{Name = "pty_win32_x64.exe"; Url = "https://github.com/MCSManager/PTY/releases/download/latest/pty_win32_x64.exe" }
+    )
     
-    Set-Location "..\.."
-    Write-Info "Binary dependencies download completed"
+    $downloadCount = 0
+    foreach ($file in $filesToCheck) {
+        $filePath = Join-Path $libDir $file.Name
+        if (-not (Test-Path $filePath)) {
+            if ($downloadCount -eq 0) {
+                Write-Info "Downloading missing binary dependencies..."
+            }
+            Set-Location $libDir
+            Download-File -Url $file.Url -OutputPath $file.Name
+            $downloadCount++
+        }
+        else {
+            Write-Info "Binary dependency already exists: $($file.Name)"
+        }
+    }
+    
+    if ($downloadCount -eq 0) {
+        Write-Info "All binary dependencies are already present"
+    }
+    else {
+        Write-Info "Binary dependencies download completed"
+    }
+    
+    Set-Location $REPO_ROOT
     Write-Host ""
     
     # Step 4: Build production version
     Write-Info "Step 4/6: Building production version..."
+    Set-Location $REPO_ROOT
     Write-Warn "This may take a few minutes, please wait..."
-    if (Test-Path "build.bat") {
-        & .\build.bat
+    if (Test-Path "$REPO_ROOT\build.bat") {
+        & "$REPO_ROOT\build.bat"
     }
     else {
-        Write-ErrorMsg "build.bat file not found"
+        Write-ErrorMsg "build.bat file not found at: $REPO_ROOT\build.bat"
         exit 1
     }
     
-    if (-not (Test-Path "production-code")) {
-        Write-ErrorMsg "Build failed, production-code directory does not exist"
+    if (-not (Test-Path "$REPO_ROOT\production-code")) {
+        Write-ErrorMsg "Build failed, production-code directory does not exist at: $REPO_ROOT\production-code"
         exit 1
     }
     Write-Info "Build completed!"
@@ -188,6 +249,9 @@ function Main {
     # Step 5: Deploy to production directory
     Write-Info "Step 5/6: Deploying to production directory..."
     Write-Info "Deployment directory: $DEPLOY_DIR"
+    
+    # Ensure we're in repository root
+    Set-Location $REPO_ROOT
     
     # If directory exists, ask if backup is needed
     if (Test-Path $DEPLOY_DIR) {
@@ -213,12 +277,12 @@ function Main {
     
     # Copy build artifacts
     Write-Info "Copying build artifacts..."
-    Copy-Item -Path "production-code\*" -Destination $DEPLOY_DIR -Recurse -Force
+    Copy-Item -Path "$REPO_ROOT\production-code\*" -Destination $DEPLOY_DIR -Recurse -Force
     
     # Copy startup scripts
     Write-Info "Copying startup scripts..."
-    if (Test-Path "prod-scripts\windows") {
-        Copy-Item -Path "prod-scripts\windows\*" -Destination $DEPLOY_DIR -Recurse -Force
+    if (Test-Path "$REPO_ROOT\prod-scripts\windows") {
+        Copy-Item -Path "$REPO_ROOT\prod-scripts\windows\*" -Destination $DEPLOY_DIR -Recurse -Force
     }
     
     # Copy binary dependencies
@@ -227,8 +291,26 @@ function Main {
     if (-not (Test-Path $targetLibDir)) {
         New-Item -ItemType Directory -Path $targetLibDir -Force | Out-Null
     }
-    if (Test-Path "daemon\lib") {
-        Copy-Item -Path "daemon\lib\*" -Destination $targetLibDir -Force -ErrorAction SilentlyContinue
+    if (Test-Path "$REPO_ROOT\daemon\lib") {
+        Copy-Item -Path "$REPO_ROOT\daemon\lib\*" -Destination $targetLibDir -Force -ErrorAction SilentlyContinue
+    }
+    
+    # Download and copy node_app.exe
+    Write-Info "Downloading node_app.exe..."
+    $nodeExeUrl = "https://nodejs.org/download/release/latest-v20.x/win-x64/node.exe"
+    $tempNodeExe = "$env:TEMP\node_app.exe"
+    
+    try {
+        Download-File -Url $nodeExeUrl -OutputPath $tempNodeExe
+        Write-Info "Copying node_app.exe to daemon and web directories..."
+        Copy-Item -Path $tempNodeExe -Destination "$DEPLOY_DIR\daemon\node_app.exe" -Force
+        Copy-Item -Path $tempNodeExe -Destination "$DEPLOY_DIR\web\node_app.exe" -Force
+        Remove-Item -Path $tempNodeExe -Force -ErrorAction SilentlyContinue
+        Write-Info "node_app.exe copied successfully"
+    }
+    catch {
+        Write-Warn "Failed to download node_app.exe: $_"
+        Write-Warn "You may need to manually copy node.exe to $DEPLOY_DIR\daemon\node_app.exe and $DEPLOY_DIR\web\node_app.exe"
     }
     
     Write-Info "Deployment files copy completed"

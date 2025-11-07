@@ -74,21 +74,52 @@ main() {
     check_command tar
     check_nodejs
     
-    # 步骤 1: Clone 仓库
-    print_info "步骤 1/6: Clone 仓库..."
-    mkdir -p $BUILD_DIR
-    cd $BUILD_DIR
-    if [ ! -d "MCSManager" ]; then
-        print_info "正在 Clone 仓库..."
-        git clone $REPO_URL
-    else
-        print_info "仓库已存在，正在更新..."
-        cd MCSManager
-        git pull
-        cd ..
+    # 步骤 1: 检查仓库
+    print_info "步骤 1/6: 检查仓库..."
+    CURRENT_DIR=$(pwd)
+    IS_MCSMANAGER_REPO=false
+    REPO_PATH=""
+    
+    # 检查当前目录是否是 MCSManager 仓库
+    if [ -d ".git" ] && [ -f "package.json" ] && [ -d "daemon" ] && [ -d "panel" ] && [ -d "frontend" ]; then
+        print_info "检测到当前目录是 MCSManager 仓库: $CURRENT_DIR"
+        IS_MCSMANAGER_REPO=true
+        REPO_PATH="$CURRENT_DIR"
+    # 检查当前目录下是否有 MCSManager 子目录
+    elif [ -d "MCSManager/.git" ]; then
+        print_info "检测到 MCSManager 仓库在子目录: $CURRENT_DIR/MCSManager"
+        IS_MCSMANAGER_REPO=true
+        REPO_PATH="$CURRENT_DIR/MCSManager"
+    # 检查 BUILD_DIR 下是否有 MCSManager
+    elif [ -d "$BUILD_DIR/MCSManager/.git" ]; then
+        print_info "检测到 MCSManager 仓库在: $BUILD_DIR/MCSManager"
+        IS_MCSMANAGER_REPO=true
+        REPO_PATH="$BUILD_DIR/MCSManager"
     fi
-    cd MCSManager
-    print_info "仓库位置: $(pwd)"
+    
+    if [ "$IS_MCSMANAGER_REPO" = true ]; then
+        # 使用现有仓库
+        cd "$REPO_PATH"
+        print_info "正在更新现有仓库..."
+        git pull
+        print_info "仓库位置: $(pwd)"
+    else
+        # 克隆新仓库
+        print_info "未找到 MCSManager 仓库，正在克隆..."
+        mkdir -p $BUILD_DIR
+        cd $BUILD_DIR
+        if [ ! -d "MCSManager" ]; then
+            print_info "正在克隆仓库到: $BUILD_DIR/MCSManager"
+            git clone $REPO_URL
+        else
+            print_info "目录已存在，正在更新..."
+            cd MCSManager
+            git pull
+            cd ..
+        fi
+        cd MCSManager
+        print_info "仓库位置: $(pwd)"
+    fi
     echo ""
     
     # 步骤 2: 安装 npm 依赖
