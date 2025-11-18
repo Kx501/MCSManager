@@ -3,7 +3,6 @@ import type { RemoteMappingEntry } from "@/tools/protocol";
 import type {
   InstanceDetail,
   JsonData,
-  NewInstanceForm,
   NewScheduleTask,
   QuickStartTemplate,
   Schedule
@@ -191,7 +190,7 @@ export const uploadAddress = useDefineApi<
       upload_dir: string;
       daemonId: string;
     };
-    data: NewInstanceForm;
+    data: IGlobalInstanceConfig;
   },
   {
     instanceUuid: string;
@@ -223,7 +222,7 @@ export const createInstance = useDefineApi<
     params: {
       daemonId: string;
     };
-    data: NewInstanceForm;
+    data: IGlobalInstanceConfig;
   },
   {
     instanceUuid: string;
