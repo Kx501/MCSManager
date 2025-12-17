@@ -248,130 +248,37 @@ Before contributing code to this project, please make sure to review the followi
 
 ## Development
 
-**This section is intended for developers.** If you plan to contribute to MCSManager or perform secondary development, please review the following requirements:
+### Project Structure
 
-### Required Setup
+The project comprises three core modules:
 
-We recommend using **Visual Studio Code** for development. You **must install** the following extensions:
+- Daemon backend (`daemon` directory)
+- Web backend (`panel` directory)
+- Web frontend (`frontend` directory)
 
-- **I18n Ally** – Internationalization text display support
-- **Prettier** – Code formatter
-- **Vue – Official** – Vue framework support
-- **ESLint** – JavaScript/TypeScript linting and code style enforcement
+**Web Backend Responsibilities:**
 
-### Dependency Files
+- User management
+- Node connectivity
+- Authentication and authorization
+- API services
 
-To enable the **emulated terminal** and **file decompression** features, you need to download and install required binary dependencies manually:
+**Daemon Backend Responsibilities:**
 
-- Visit the following repositories:
-  - [PTY](https://github.com/MCSManager/PTY)
-  - [Zip-Tools](https://github.com/MCSManager/Zip-Tools)
-- Download the appropriate binaries for your operating system.
-- Place the downloaded files into the `daemon/lib/` directory.
-  - If the `lib` folder does not exist, create it manually.
+- Process management for server instances
+- Docker container operations
+- File system management
+- Real-time terminal access
 
-Download three dependency files, select according to your system architecture, and check Releases to find binaries suitable for your system and architecture.
+**Web Frontend Responsibilities:**
 
-For example:
+- User interface implementation
+- Web backend integration
+- Direct node communication for optimized performance
 
-```bash
-cd /opt/mcsmanager/daemon
-mkdir lib && cd lib
+### Setting Up Development Environment
 
-# Emulated terminal dependency library
-wget https://github.com/MCSManager/PTY/releases/download/latest/pty_linux_x64
-
-# Extract & compress file dependency library
-wget https://github.com/MCSManager/Zip-Tools/releases/download/latest/file_zip_linux_x64
-
-# 7z archive support, optional download
-wget https://github.com/MCSManager/Zip-Tools/releases/download/latest/7z_linux_x64
-```
-
-This step is essential to ensure proper functionality of terminal emulation and archive handling within MCSManager.
-
----
-
-### Running
-
-```bash
-git clone https://github.com/MCSManager/MCSManager.git
-
-# For macOS
-./install-dependents.sh
-./npm-dev-macos.sh
-
-# For Windows
-./install-dependents.bat
-./npm-dev-windows.bat
-```
-
-### Code Internationalization
-
-Since MCSManager supports multiple languages, **all strings and comments in the codebase must be written in English**.  
-**Do not hardcode any non-English text directly into the code.**
-
-For example, when introducing a new string that needs to support translation:
-
-```ts
-import { $t } from "../i18n";
-
-if (!checkName) {
-  const errorMsg = "Check Name Failed!" // Avoid hardcoding text like this
-  const errorMsg = $t("TXT_CODE_MY_ERROR"); // Use i18n keys instead
-}.
-```
-
-```html
-<script lang="ts" setup>
-  import { t } from "@/lang/i18n";
-  // ...
-</script>
-
-<template>
-  <!-- ... -->
-  <a-menu-item key="toNodesPage" @click="toNodesPage()">
-    <FormOutlined />
-    {{ t("TXT_CODE_NODE_INFO") }}
-  </a-menu-item>
-</template>
-```
-
-After adding new keys, be sure to update the appropriate language file, for example: languages/en_US.json.
-
-The `en_US.json` file is mandatory and serves as the base source for all other languages.
-Other language files can be automatically translated later using AI or manual review.
-
-```json
-{
-  //...
-  "TXT_CODE_MY_ERROR": "Check Name Failed!",
-  "TXT_CODE_NODE_INFO": "Jump to Node Page"
-}
-```
-
-If you have the `I18n Ally` plugin installed, your usage of `$t("TXT_CODE_MY_ERROR")` will display the actual English translation inline.
-
-If your translation string requires parameters, it may be slightly more complex.
-Note that the frontend and backend use different i18n libraries, so the parameter formats may vary. Please refer to similar examples in the codebase to understand the correct syntax.
-
-Lastly, translation keys must be unique, to avoid conflicts, use **longer**, **descriptive** key names.
-
-<br />
-
-### Building Production Environment Version
-
-To generate the production build, run the appropriate script based on your operating system:
-
-```bash
-# Windows
-./build.bat
-
-# macOS / Linux
-./build.sh
-```
-
-After the build process completes, the compiled production code will be located in the `production-code` directory.
+See: [DEVELOPMENT.md](./DEVELOPMENT.md)
 
 <br />
 
@@ -398,7 +305,7 @@ For serious **security vulnerabilities** that should not be disclosed publicly, 
 
 Once resolved, we will credit the discoverer in the relevant code or release notes.
 
-<br/ >
+<br />
 
 ## Contributors
 
