@@ -9,8 +9,10 @@ set -e  # 遇到错误立即退出
 
 # 配置变量
 REPO_URL="https://github.com/Kx501/MCSManager.git"
-BUILD_DIR="/opt/mcsmanager-source"
-DEPLOY_DIR="/opt/mcsmanager"
+# 获取脚本所在目录
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BUILD_DIR="$SCRIPT_DIR/mcsmanager-source"
+DEPLOY_DIR="$SCRIPT_DIR/mcsmanager"
 CURRENT_USER=$(whoami)
 
 # 颜色输出

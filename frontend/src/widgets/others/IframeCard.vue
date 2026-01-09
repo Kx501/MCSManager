@@ -41,7 +41,7 @@ const toggleFullCard = () => {
 const sendThemeToIframe = () => {
   if (!myIframe.value?.contentWindow) return;
   
-  const theme = isDarkTheme() ? "dark" : "light";
+  const theme = isDarkTheme.value ? "dark" : "light";
   try {
     myIframe.value.contentWindow.postMessage(
       {
@@ -57,7 +57,7 @@ const sendThemeToIframe = () => {
 
 // Watch theme changes
 watch(
-  () => isDarkTheme(),
+  isDarkTheme,
   () => {
     // Send theme information to iframe when theme changes
     sendThemeToIframe();

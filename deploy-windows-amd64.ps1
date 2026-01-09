@@ -9,8 +9,10 @@ $ErrorActionPreference = "Stop"
 
 # Configuration variables
 $REPO_URL = "https://github.com/Kx501/MCSManager.git"
-$BUILD_DIR = "C:\mcsmanager-source"
-$DEPLOY_DIR = "C:\mcsmanager"
+# Get script directory
+$SCRIPT_DIR = $PSScriptRoot
+$BUILD_DIR = Join-Path $SCRIPT_DIR "mcsmanager-source"
+$DEPLOY_DIR = Join-Path $SCRIPT_DIR "mcsmanager"
 
 # Color output functions
 function Write-Info {
