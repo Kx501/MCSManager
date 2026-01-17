@@ -54,6 +54,11 @@ export default class InstanceConfig implements IGlobalInstanceConfig {
     autoStartDelaySeconds: 10
   };
 
+  // java
+  public java: IInstanceJavaConfig = {
+    id: ""
+  };
+
   // Extend
   public docker: IGlobalInstanceDockerConfig = {
     containerName: "",

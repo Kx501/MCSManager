@@ -8,8 +8,10 @@ import { CircularBuffer } from "../../common/string_cache";
 import StorageSubsystem from "../../common/system_storage";
 import { STEAM_CMD_PATH } from "../../const";
 import { $t } from "../../i18n";
+import javaManager from "../../service/java_manager";
 import logger from "../../service/log";
 import InstanceCommand from "../commands/base/command";
+import { commandStringToArray } from "../commands/base/command_parser";
 import FunctionDispatcher, { IPresetCommand } from "../commands/dispatcher";
 import { OpenFrp } from "../commands/task/openfrp";
 import { globalConfiguration } from "../config";
@@ -252,6 +254,12 @@ export default class Instance extends EventEmitter {
       configureEntityParams(this.config.terminalOption, cfg.terminalOption, "haveColor", Boolean);
     }
 
+    if (cfg.startCommand && commandStringToArray(cfg.startCommand)[0] != "{mcsm_java}") {
+      this.config.java.id = "";
+    } else if (cfg.java) {
+      configureEntityParams(this.config.java, cfg.java, "id", String);
+    }
+
     if (persistence) {
       if (!this.config.basePort) this.allocatePort(this.config);
       StorageSubsystem.store("InstanceConfig", this.instanceUuid, this.config);
@@ -355,6 +363,8 @@ export default class Instance extends EventEmitter {
   // function that must be executed after the instance has been closed
   // trigger exit event
   stopped(code = 0) {
+    // Close all lifecycle tasks
+    this.stopOutputLoop();
     this.println("INFO", $t("TXT_CODE_70ce6fbb"));
     this.releaseResources();
     if (this.instanceStatus != Instance.STATUS_STOP) {
@@ -364,8 +374,6 @@ export default class Instance extends EventEmitter {
       StorageSubsystem.store("InstanceConfig", this.instanceUuid, this.config);
     }
 
-    // Close all lifecycle tasks
-    this.stopOutputLoop();
     this.lifeCycleTaskManager.execLifeCycleTask(0);
 
     // If automatic restart is enabled, the startup operation is performed immediately
@@ -503,10 +511,11 @@ export default class Instance extends EventEmitter {
     this.info.currentPlayers = 0;
     this.info.maxPlayers = 0;
     this.info.version = "";
+
     this.info.latency = 0;
   }
 
-  public parseTextParams(text: string) {
+  public async parseTextParams(text: string) {
     if (typeof text !== "string") return "";
     text = text.replace(/\{mcsm_workspace\}/gim, this.absoluteCwdPath());
     text = text.replace(/\{mcsm_cwd\}/gim, this.absoluteCwdPath());
@@ -517,6 +526,11 @@ export default class Instance extends EventEmitter {
     text = text.replace(/\{mcsm_instance_id\}/gim, this.instanceUuid);
     text = text.replace(/\{mcsm_instance_name\}/gim, this.config.nickname);
     text = text.replace(/\{mcsm_instance_base_port\}/gim, String(this.config.basePort));
+
+    const javaId = this.config.java.id;
+    if (javaId) {
+      text = text.replace(/\{mcsm_java\}/gim, await javaManager.getJavaRuntimeCommand(javaId));
+    }
 
     const ports = Array.from(
       { length: globalConfiguration.config.portAssignInterval || 1 },
@@ -552,18 +566,23 @@ export default class Instance extends EventEmitter {
     this.outputBuffer.pushLog(data);
   }
 
+  private flushOutputBuffer(shouldClear = false) {
+    const { items, wasDeleted } = this.outputBuffer.getCache();
+    if (!items.length) return;
+    if (wasDeleted) items.unshift(IGNORE_TEXT);
+    if (shouldClear) this.outputBuffer.clear();
+    this.emit("data", items.join(""));
+  }
+
   private startOutputLoop() {
-    this.stopOutputLoop();
     this.outputLoopTask = setInterval(() => {
-      const { items, wasDeleted } = this.outputBuffer.getCache();
-      if (!items.length) return;
-      if (wasDeleted) items.unshift(IGNORE_TEXT);
-      this.emit("data", items.join(""));
+      this.flushOutputBuffer();
     }, 50);
   }
 
   private stopOutputLoop() {
     if (this.outputLoopTask) clearInterval(this.outputLoopTask);
     this.outputLoopTask = undefined;
+    this.flushOutputBuffer(true);
   }
 }

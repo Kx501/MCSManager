@@ -3,7 +3,6 @@ import InnerCard from "@/components/InnerCard.vue";
 import ResponsiveLayoutGroup from "@/components/ResponsiveLayoutGroup.vue";
 import { useAppRouters } from "@/hooks/useAppRouters";
 import {
-  TYPE_MINECRAFT_BEDROCK,
   TYPE_MINECRAFT_JAVA,
   TYPE_STEAM_SERVER_UNIVERSAL,
   useInstanceInfo
@@ -22,17 +21,18 @@ import {
   DashboardOutlined,
   FieldTimeOutlined,
   FolderOpenOutlined,
+  UsbOutlined,
   UsergroupDeleteOutlined
 } from "@ant-design/icons-vue";
 
 import { computed, ref, watch } from "vue";
 import type { RouteLocationPathRaw } from "vue-router";
-import { LayoutCardHeight } from "../../config/originLayoutConfig";
 import { useLayoutCardTools } from "../../hooks/useCardTools";
 import { arrayFilter } from "../../tools/array";
 import EventConfig from "./dialogs/EventConfig.vue";
 import InstanceDetail from "./dialogs/InstanceDetail.vue";
 import InstanceFundamentalDetail from "./dialogs/InstanceFundamentalDetail.vue";
+import JavaManager from "./dialogs/JavaManager.vue";
 import McPingSettings from "./dialogs/McPingSettings.vue";
 import PingConfig from "./dialogs/PingConfig.vue";
 import RconSettings from "./dialogs/RconSettings.vue";
@@ -41,6 +41,7 @@ import TermConfig from "./dialogs/TermConfig.vue";
 const terminalConfigDialog = ref<InstanceType<typeof TermConfig>>();
 const rconSettingsDialog = ref<InstanceType<typeof RconSettings>>();
 const mcSettingsDialog = ref<InstanceType<typeof McPingSettings>>();
+const javaManagerDialog = ref<InstanceType<typeof JavaManager>>();
 const eventConfigDialog = ref<InstanceType<typeof EventConfig>>();
 const pingConfigDialog = ref<InstanceType<typeof PingConfig>>();
 const instanceDetailsDialog = ref<InstanceType<typeof InstanceDetail>>();
@@ -148,7 +149,7 @@ const btns = computed(() => {
     },
     {
       title: t("TXT_CODE_MOD_MANAGER"),
-      icon: AppstoreAddOutlined,
+      icon: UsbOutlined,
       click: () => {
         toPage({ path: "/instances/terminal/mods" });
       },
@@ -157,18 +158,18 @@ const btns = computed(() => {
         // Narrow it down to Minecraft server types only (Java or Bedrock)
         const isMC = type.startsWith("minecraft/java") || type.startsWith("minecraft/bedrock");
         if (!isMC) return false;
-
         const hasPermission = state.settings.canFileManager || isAdmin.value;
         if (!hasPermission) return false;
         if (!foldersLoaded.value) return false;
         return folders.value && folders.value.length > 0;
       }
     },
+
     {
-      title: t("TXT_CODE_40241d8e"),
-      icon: UsergroupDeleteOutlined,
+      title: t("TXT_CODE_3fee13ed"),
+      icon: BuildOutlined,
       click: () => {
-        mcSettingsDialog.value?.openDialog();
+        javaManagerDialog.value?.openDialog();
       },
       condition: () => instanceInfo.value?.config.type.includes(TYPE_MINECRAFT_JAVA) ?? false
     },
@@ -181,13 +182,7 @@ const btns = computed(() => {
       condition: () =>
         instanceInfo.value?.config.type.includes(TYPE_STEAM_SERVER_UNIVERSAL) ?? false
     },
-    {
-      title: t("TXT_CODE_d23631cb"),
-      icon: CodeOutlined,
-      click: () => {
-        terminalConfigDialog.value?.openDialog();
-      }
-    },
+
     {
       title: t("TXT_CODE_b7d026f8"),
       icon: FieldTimeOutlined,
@@ -210,12 +205,27 @@ const btns = computed(() => {
       }
     },
     {
+      title: t("TXT_CODE_d23631cb"),
+      icon: CodeOutlined,
+      click: () => {
+        terminalConfigDialog.value?.openDialog();
+      }
+    },
+    {
       title: t("TXT_CODE_4f34fc28"),
       icon: AppstoreAddOutlined,
       condition: () => isAdmin.value,
       click: () => {
         instanceDetailsDialog.value?.openDialog();
       }
+    },
+    {
+      title: t("TXT_CODE_40241d8e"),
+      icon: UsergroupDeleteOutlined,
+      click: () => {
+        mcSettingsDialog.value?.openDialog();
+      },
+      condition: () => instanceInfo.value?.config.type.includes(TYPE_MINECRAFT_JAVA) ?? false
     },
     {
       title: t("TXT_CODE_4f34fc28"),
@@ -244,11 +254,7 @@ watch(instanceInfo, (cfg, oldCfg) => {
     <template #body>
       <ResponsiveLayoutGroup class="function-btns-container" :items="btns">
         <template #default="{ item }">
-          <InnerCard
-            :style="{ height: LayoutCardHeight.MINI }"
-            :icon="item.icon"
-            @click="item.click"
-          >
+          <InnerCard :style="{ height: '90px' }" :icon="item.icon" @click="item.click">
             <template #title>
               {{ item.title }}
             </template>
@@ -319,6 +325,14 @@ watch(instanceInfo, (cfg, oldCfg) => {
     :instance-info="instanceInfo"
     :instance-id="instanceId"
     :daemon-id="daemonId"
+    @update="refreshInstanceInfo"
+  />
+
+  <JavaManager
+    ref="javaManagerDialog"
+    :instance-info="instanceInfo"
+    :daemon-id="daemonId"
+    :instance-id="instanceId"
     @update="refreshInstanceInfo"
   />
 </template>
