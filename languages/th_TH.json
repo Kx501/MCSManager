@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "โหมดเครือข่าย",
   "TXT_CODE_efd37c48": "จัดการอินสแตนซ์",
   "TXT_CODE_effefaab": "ส่งคำสั่งยุติการทำงาน",
+  "TXT_CODE_efgcasda": "ความล่าช้าในการเริ่มต้นอัตโนมัติ (วินาที)",
+  "TXT_CODE_efgcasfe": "ความล่าช้าเป็นวินาทีก่อนที่จะเริ่มต้นอินสแตนซ์โดยอัตโนมัติหลังจาก daemon เริ่มทำงาน",
   "TXT_CODE_environment_router.crateErr": "เกิดข้อผิดพลาดในการสร้างอิมเมจ {{name}}:{{tag}}: {{error}}",
   "TXT_CODE_environment_router.crateImage": "Daemon กำลังสร้างอิมเมจ {{name}}:{{tag}} ด้วย DockerFile ต่อไปนี้:\n{{dockerFileText}}\n",
   "TXT_CODE_environment_router.crateSuccess": "การสร้างอิมเมจ {{name}}:{{tag}} เสร็จสมบูรณ์",

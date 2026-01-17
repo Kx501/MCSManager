@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "網路模式",
   "TXT_CODE_efd37c48": "功能組",
   "TXT_CODE_effefaab": "終止指令已發出",
+  "TXT_CODE_efgcasda": "自動啟動延遲（秒）",
+  "TXT_CODE_efgcasfe": "守護進程啟動後，自動啟動實例前的延遲秒數。",
   "TXT_CODE_environment_router.crateErr": "建立映像 {{name}}:{{tag}} 錯誤:{{error}}",
   "TXT_CODE_environment_router.crateImage": "守護程式正在建立映像 {{name}}:{{tag}} DockerFile 如下:\n{{dockerFileText}}\n",
   "TXT_CODE_environment_router.crateSuccess": "建立映像 {{name}}:{{tag}} 完畢",

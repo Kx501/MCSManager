@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "ネットワークモード",
   "TXT_CODE_efd37c48": "管理機能",
   "TXT_CODE_effefaab": "解雇命令が出された",
+  "TXT_CODE_efgcasda": "自動起動遅延（秒）",
+  "TXT_CODE_efgcasfe": "デーモン起動後、インスタンスを自動起動するまでの遅延秒数。",
   "TXT_CODE_environment_router.crateErr": "イメージの作成 {{name}}:{{tag}} エラー:{{error}}",
   "TXT_CODE_environment_router.crateImage": "デーモンは次のようにイメージ {{name}}:{{tag}} DockerFile を構築します。\n\n{{dockerFileText}}",
   "TXT_CODE_environment_router.crateSuccess": "イメージ {{name}}:{{tag}} の作成が完了しました",

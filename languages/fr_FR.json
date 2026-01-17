@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "mode réseau",
   "TXT_CODE_efd37c48": "groupe fonctionnel",
   "TXT_CODE_effefaab": "Ordonnance de résiliation émise",
+  "TXT_CODE_efgcasda": "Délai de démarrage automatique (secondes)",
+  "TXT_CODE_efgcasfe": "Délai en secondes avant le démarrage automatique de l'instance après le démarrage du démon.",
   "TXT_CODE_environment_router.crateErr": "Créer une image {{name}} :{{tag}} Erreur :{{error}}",
   "TXT_CODE_environment_router.crateImage": "Le démon construit l'image {{name}} :{{tag}} DockerFile comme suit :\n\n{{dockerFileText}}",
   "TXT_CODE_environment_router.crateSuccess": "Création de l'image {{name}} :{{tag}} terminée",

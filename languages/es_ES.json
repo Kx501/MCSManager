@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "Modo de red",
   "TXT_CODE_efd37c48": "grupo funcional",
   "TXT_CODE_effefaab": "Orden de rescisión emitida",
+  "TXT_CODE_efgcasda": "Retraso de inicio automático (segundos)",
+  "TXT_CODE_efgcasfe": "Retraso en segundos antes de iniciar automáticamente la instancia después de que el demonio se inicie.",
   "TXT_CODE_environment_router.crateErr": "Crear imagen {{name}}:{{tag}} Error:{{error}}",
   "TXT_CODE_environment_router.crateImage": "El demonio está creando la imagen {{name}}:{{tag}} DockerFile de la siguiente manera:\n\n{{dockerFileText}}",
   "TXT_CODE_environment_router.crateSuccess": "Creación de la imagen {{name}}:{{tag}} completada",

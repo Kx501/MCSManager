@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "Ağ Modu",
   "TXT_CODE_efd37c48": "Örneği Yönet",
   "TXT_CODE_effefaab": "Sonlandırma komutu gönderildi",
+  "TXT_CODE_efgcasda": "Otomatik Başlatma Gecikmesi (Saniye)",
+  "TXT_CODE_efgcasfe": "Daemon başladıktan sonra örneği otomatik olarak başlatmadan önceki saniye cinsinden gecikme.",
   "TXT_CODE_environment_router.crateErr": "{{name}}:{{tag}} görüntüsü oluşturulurken hata oluştu: {{error}}",
   "TXT_CODE_environment_router.crateImage": "Daemon aşağıdaki DockerFile:\n{{dockerFileText}}\n ile {{name}}:{{tag}} görüntüsünü oluşturuyor",
   "TXT_CODE_environment_router.crateSuccess": "Image {{name}}:{{tag}} oluşturma işlemi tamamlandı.",

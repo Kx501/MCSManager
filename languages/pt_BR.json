@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "Modo de Rede",
   "TXT_CODE_efd37c48": "Gerenciar Instância",
   "TXT_CODE_effefaab": "Enviado comando de terminar",
+  "TXT_CODE_efgcasda": "Atraso de Inicialização Automática (Segundos)",
+  "TXT_CODE_efgcasfe": "Atraso em segundos antes de iniciar automaticamente a instância após o daemon iniciar.",
   "TXT_CODE_environment_router.crateErr": "Erro ao criar imagem {{name}}:{{tag}}: {{error}}",
   "TXT_CODE_environment_router.crateImage": "Daemon está criando a imagem {{name}}:{{tag}} com o seguinte DockerFile:\n{{dockerFileText}}\n",
   "TXT_CODE_environment_router.crateSuccess": "Criação da imagem {{name}}:{{tag}} concluída.",

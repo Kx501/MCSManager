@@ -2888,6 +2888,8 @@
   "TXT_CODE_efcef926": "Режим сети",
   "TXT_CODE_efd37c48": "Управление экземпляром",
   "TXT_CODE_effefaab": "Отправлена команда завершения",
+  "TXT_CODE_efgcasda": "Задержка автоматического запуска (секунды)",
+  "TXT_CODE_efgcasfe": "Задержка в секундах перед автоматическим запуском экземпляра после запуска демона.",
   "TXT_CODE_environment_router.crateErr": "Ошибка создания образа {{name}}:{{tag}}: {{error}}",
   "TXT_CODE_environment_router.crateImage": "Демон создает образ {{name}}:{{tag}} с использованием следующего DockerFile:\n{{dockerFileText}}\n",
   "TXT_CODE_environment_router.crateSuccess": "Создание образа {{name}}:{{tag}} завершено.",
