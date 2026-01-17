@@ -203,8 +203,19 @@ router.get(
   async (ctx) => {
     const uuid = String(ctx.request.query.uuid);
     if (!RemoteServiceSubsystem.services.has(uuid)) throw new Error("Instance does not exist");
+    
+    const remoteService = RemoteServiceSubsystem.getInstance(uuid);
+    if (!remoteService) throw new Error("Instance does not exist");
+    
+    // Check if the node is disabled
+    if (remoteService.config.disabled) {
+      ctx.status = 400;
+      ctx.body = { error: "Node is disabled and cannot be connected" };
+      return;
+    }
+    
     try {
-      RemoteServiceSubsystem.getInstance(uuid)?.connect();
+      remoteService.connect();
       ctx.body = true;
     } catch (error: any) {
       ctx.body = error;

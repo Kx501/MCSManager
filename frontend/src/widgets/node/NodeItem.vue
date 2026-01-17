@@ -57,12 +57,18 @@ if (props.card) {
   }
 }
 
-const tryConnectNode = async (uuid: string, showMsg = true) => {
+const tryConnectNode = async (node: ComputedNodeInfo, showMsg = true) => {
+  // Check if the node is disabled
+  if ((node.config as any)?.disabled) {
+    reportErrorMsg(t("TXT_CODE_NODE_DISABLED_DESC"));
+    return;
+  }
+
   const { execute } = connectNode();
   try {
     await execute({
       params: {
-        uuid: uuid
+        uuid: node.uuid
       }
     });
     if (showMsg) message.success(t("TXT_CODE_7f0c746d"));
@@ -176,7 +182,7 @@ const nodeOperations = computed(() =>
       title: t("TXT_CODE_f8b28901"),
       icon: ReloadOutlined,
       click: async (node: ComputedNodeInfo) => {
-        await tryConnectNode(node.uuid);
+        await tryConnectNode(node);
       },
       condition: () => !remoteNode.value!.available
     },

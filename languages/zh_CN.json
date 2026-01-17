@@ -1885,7 +1885,7 @@
   "TXT_CODE_MimBB1Ea": "传递标签到容器",
   "TXT_CODE_NAME": "名称",
   "TXT_CODE_NODE_DISABLED": "禁用",
-  "TXT_CODE_NODE_DISABLED_DESC": "禁用后，该节点将被断开连接，且不再被系统使用。。",
+  "TXT_CODE_NODE_DISABLED_DESC": "禁用后，节点将被断开连接，且不再被使用。",
   "TXT_CODE_NO_DATA": "暂无数据",
   "TXT_CODE_NO_DOWNLOAD_TASK": "暂无下载任务",
   "TXT_CODE_NO_SEARCH_RESULT": "暂无搜索结果",
