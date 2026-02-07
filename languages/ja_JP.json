@@ -3106,7 +3106,7 @@
   "TXT_CODE_general_start.startSuccess": "インスタンス {{instanceUuid}} が PID: {{pid}} を正常に開始しました",
   "TXT_CODE_general_stop.execCmd": "プリセットされたシャットダウン コマンドが実行されました: {{stopCommand}}\n\nインスタンスを閉じることができない場合は、インスタンス設定に移動して、^C、stop、end などのインスタンスを閉じるための正しいコマンドを変更してください。",
   "TXT_CODE_general_stop.notRunning": "インスタンスは実行状態ではないため、停止できません。",
-  "TXT_CODE_general_stop.stopErr": "shutdown コマンドが発行されたにもかかわらず、インスタンスが長時間シャットダウンできない場合は、インスタンスの shutdown コマンドのエラーまたはインスタンス プロセスの一時停止アニメーションが原因である可能性があります。これで、インスタンスは実行状態に復元され、強制終了コマンドを使用してプロセスを終了できます。",
+  "TXT_CODE_general_stop.stopErr": "シャットダウンコマンドを送信しましたが、インスタンスが長時間停止しませんでした。シャットダウンコマンドの誤りやプロセスの応答停止が原因の可能性があります。タイムアウトのため、プロセスを自動で強制終了しました。",
   "TXT_CODE_general_update.cmdFormatErr": "更新コマンドの形式が間違っています。管理者に問い合わせてください。",
   "TXT_CODE_general_update.err": "エラー",
   "TXT_CODE_general_update.error": "更新エラー: {{err}}",

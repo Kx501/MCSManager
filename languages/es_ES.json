@@ -3106,7 +3106,7 @@
   "TXT_CODE_general_start.startSuccess": "La instancia {{instanceUuid}} inició correctamente el PID: {{pid}}",
   "TXT_CODE_general_stop.execCmd": "Comando de apagado preestablecido ejecutado: {{stopCommand}}\n\nSi no puede cerrar la instancia, vaya a la configuración de la instancia para cambiar el comando correcto para cerrar la instancia, como ^C, detener, finalizar, etc.",
   "TXT_CODE_general_stop.notRunning": "La instancia no está en estado de ejecución y no se puede detener.",
-  "TXT_CODE_general_stop.stopErr": "Si se ha emitido el comando de apagado pero la instancia no se puede cerrar durante un tiempo prolongado, puede deberse a un error en el comando de apagado de la instancia o a que la animación del proceso de la instancia suspendió. Ahora se restaurará al estado de ejecución y el proceso de instancia se suspenderá. El comando de terminación forzada se puede utilizar para finalizar el proceso.",
+  "TXT_CODE_general_stop.stopErr": "Se envió el comando de apagado pero la instancia no se detuvo dentro del tiempo de espera. Puede deberse a un comando incorrecto o a un proceso bloqueado. Por tiempo agotado, el proceso se ha terminado por fuerza automáticamente.",
   "TXT_CODE_general_update.cmdFormatErr": "El formato del comando de actualización es incorrecto, comuníquese con el administrador.",
   "TXT_CODE_general_update.err": "Error",
   "TXT_CODE_general_update.error": "Error de actualización: {{err}}",

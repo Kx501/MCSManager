@@ -3109,7 +3109,7 @@
   "TXT_CODE_general_start.startSuccess": "实例 {{instanceUuid}} 成功启动 PID: {{pid}}",
   "TXT_CODE_general_stop.execCmd": "已执行预设的关闭命令：{{stopCommand}}\n如果无法关闭实例请前往实例设置更改关闭实例的正确命令，比如 ^C，stop，end 等",
   "TXT_CODE_general_stop.notRunning": "实例未处于运行中状态，无法进行停止.",
-  "TXT_CODE_general_stop.stopErr": "关闭命令已发出但长时间未能关闭实例，可能是实例关闭命令错误或实例进程假死导致，现在将恢复到运行中状态，可使用强制终止指令结束进程。",
+  "TXT_CODE_general_stop.stopErr": "关闭命令已发出但长时间未能关闭实例，可能是实例关闭命令错误或实例进程假死导致，已自动强制终止进程。",
   "TXT_CODE_general_update.cmdFormatErr": "更新命令格式错误，请联系管理员",
   "TXT_CODE_general_update.err": "错误",
   "TXT_CODE_general_update.error": "更新错误: {{err}}",

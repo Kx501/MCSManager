@@ -3106,7 +3106,7 @@
   "TXT_CODE_general_start.startSuccess": "Instância {{instanceUuid}} iniciada com PID: {{pid}}",
   "TXT_CODE_general_stop.execCmd": "O comando de desligamento predefinido foi executado: {{stopCommand}}\nSe a instância não parar, por favor, altere para o comando de desligamento correto, como ^C, stop, end, etc.",
   "TXT_CODE_general_stop.notRunning": "Instância não está em execução e não pode ser parada.",
-  "TXT_CODE_general_stop.stopErr": "O comando de desligamento foi enviado, mas a instância não parou por um longo período. Isso pode ser devido a um comando de desligamento incorreto ou a um congelamento do processo. A instância agora retornará ao estado de execução, e você pode usar a função 'Terminar' para encerrar o processo.",
+  "TXT_CODE_general_stop.stopErr": "O comando de desligamento foi enviado, mas a instância não parou dentro do tempo limite. Pode ser devido a um comando incorreto ou a um processo travado. Por tempo esgotado, o processo foi encerrado por força automaticamente.",
   "TXT_CODE_general_update.cmdFormatErr": "Comando de atualização incorreto. Por favor, contate seu administrador.",
   "TXT_CODE_general_update.err": "Erro",
   "TXT_CODE_general_update.error": "Erro de Atualização: {{err}}",

@@ -3106,7 +3106,7 @@
   "TXT_CODE_general_start.startSuccess": "인스턴스 {{instanceUuid}}가 PID: {{pid}}를 성공적으로 시작했습니다.",
   "TXT_CODE_general_stop.execCmd": "사전 설정된 종료 명령 실행됨: {{stopCommand}}\n\n인스턴스를 닫을 수 없는 경우 인스턴스 설정으로 이동하여 ^C, 중지, 종료 등 인스턴스를 닫는 올바른 명령을 변경하세요.",
   "TXT_CODE_general_stop.notRunning": "인스턴스가 실행 상태가 아니며 중지할 수 없습니다.",
-  "TXT_CODE_general_stop.stopErr": "shutdown 명령을 내렸으나 오랫동안 인스턴스를 종료할 수 없는 경우, 인스턴스 종료 명령 오류 또는 인스턴스 프로세스 일시 중지 애니메이션으로 인해 발생한 것일 수 있습니다. 이제 실행 상태로 복원되며, 강제 종료 명령을 사용하여 프로세스를 종료할 수 있습니다.",
+  "TXT_CODE_general_stop.stopErr": "종료 명령을 보냈으나 인스턴스가 오랫동안 종료되지 않았습니다. 종료 명령 오류 또는 프로세스 정지가 원인일 수 있습니다. 시간 초과로 프로세스를 자동 강제 종료했습니다.",
   "TXT_CODE_general_update.cmdFormatErr": "업데이트 명령 형식이 올바르지 않습니다. 관리자에게 문의하세요.",
   "TXT_CODE_general_update.err": "오류",
   "TXT_CODE_general_update.error": "업데이트 오류: {{err}}",

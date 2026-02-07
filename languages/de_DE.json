@@ -2671,7 +2671,7 @@
   "TXT_CODE_general_start.startOrdinaryTerminal": "Die Anwendungsinstanz wird ausgeführt. Sie können Befehle im Befehlseingabefeld unten senden. Wenn Sie erweiterte Konsolenfunktionen wie Strg, Tab und andere Tastenkombinationen unterstützen müssen, gehen Sie bitte zu den Konsoleneinstellungen, um die simulierte Konsolenfunktion zu aktivieren.",
   "TXT_CODE_general_start.startSuccess": "Instanz {{instanceUuid}} erfolgreich gestartet PID: {{pid}}",
   "TXT_CODE_general_stop.notRunning": "Die Instanz befindet sich nicht im Ausführungsstatus und kann nicht gestoppt werden.",
-  "TXT_CODE_general_stop.stopErr": "Wenn der Befehl zum Herunterfahren ausgegeben wurde, die Instanz jedoch längere Zeit nicht heruntergefahren werden kann, kann dies an einem Fehler im Befehl zum Herunterfahren der Instanz oder an der angehaltenen Animation des Instanzprozesses liegen Der Befehl zum Erzwingen der Beendigung kann verwendet werden, um den Prozess zu beenden.",
+  "TXT_CODE_general_stop.stopErr": "Der Herunterfahren-Befehl wurde gesendet, aber die Instanz ist innerhalb der Zeitüberschreitung nicht angehalten. Dies kann an einem falschen Befehl oder einem eingefrorenen Prozess liegen. Der Prozess wurde wegen Zeitüberschreitung automatisch zwangsbeendet.",
   "TXT_CODE_general_update.cmdFormatErr": "Das Format des Aktualisierungsbefehls ist falsch. Bitte wenden Sie sich an den Administrator.",
   "TXT_CODE_general_update.error": "Aktualisierungsfehler: {{err}}",
   "TXT_CODE_general_update.killProcess": "Das Task-Programm wird zwangsweise beendet...",

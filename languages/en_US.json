@@ -3125,7 +3125,7 @@
   "TXT_CODE_general_start.startSuccess": "Instance {{instanceUuid}} started with PID: {{pid}}",
   "TXT_CODE_general_stop.execCmd": "The predefined shutdown command has been executed: {{stopCommand}}\nIf the instance does not stop, please change the correct shutdown command, such as ^C, stop, end, etc.",
   "TXT_CODE_general_stop.notRunning": "Instance not running and cannot be stopped.",
-  "TXT_CODE_general_stop.stopErr": "The shutdown command has been sent but the instance has not stopped for an extended period. This could be due to an incorrect shutdown command or a process freeze. The instance will now return to running state, and you can use 'Terminate' function to end the process.",
+  "TXT_CODE_general_stop.stopErr": "The shutdown command was sent but the instance did not stop within the timeout. This may be due to an incorrect shutdown command or a frozen process. The process has been force-terminated.",
   "TXT_CODE_general_update.cmdFormatErr": "Incorrect update command. Please contact your administrator.",
   "TXT_CODE_general_update.err": "Error",
   "TXT_CODE_general_update.error": "Update Error: {{err}}",

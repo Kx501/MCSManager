@@ -3106,7 +3106,7 @@
   "TXT_CODE_general_start.startSuccess": "實例 {{instanceUuid}} 成功啟動 PID: {{pid}}",
   "TXT_CODE_general_stop.execCmd": "已執行預設的關閉命令：{{stopCommand}}\n如果無法關閉實例請前往實例設定更改關閉實例的正確命令，例如 ^C，stop，end 等",
   "TXT_CODE_general_stop.notRunning": "實例未處於執行狀態，無法進行停止.",
-  "TXT_CODE_general_stop.stopErr": "關閉命令已發出但長時間未能關閉實例，可能是實例關閉命令錯誤或實例行程假死導致，現在將恢復到執行中狀態，可使用強制終止指令結束行程。",
+  "TXT_CODE_general_stop.stopErr": "關閉命令已發出但長時間未能關閉實例，可能是實例關閉命令錯誤或實例行程假死導致，已超時並自動強制終止行程。",
   "TXT_CODE_general_update.cmdFormatErr": "更新指令格式錯誤，請聯絡管理員",
   "TXT_CODE_general_update.err": "錯誤",
   "TXT_CODE_general_update.error": "更新錯誤: {{err}}",

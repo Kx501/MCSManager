@@ -3106,7 +3106,7 @@
   "TXT_CODE_general_start.startSuccess": "Örnek {{instanceUuid}} PID: {{pid}} ile başlatıldı",
   "TXT_CODE_general_stop.execCmd": "Önceden tanımlanmış kapatma komutu çalıştırıldı: {{stopCommand}}\nEğer örnek durmazsa, lütfen ^C, stop, end vb. gibi doğru kapatma komutunu değiştirin.",
   "TXT_CODE_general_stop.notRunning": "Örnek çalışmıyor ve durdurulamıyor.",
-  "TXT_CODE_general_stop.stopErr": "Kapatma komutu gönderildi ancak örnek uzun bir süre boyunca durdurulmadı. Bunun nedeni hatalı bir kapatma komutu veya sürecin donması olabilir. Örnek şimdi çalışma durumuna dönecektir ve süreci sonlandırmak için 'Terminate' işlevini kullanabilirsiniz.",
+  "TXT_CODE_general_stop.stopErr": "Kapatma komutu gönderildi ancak örnek zaman aşımı içinde durmadı. Hatalı kapatma komutu veya donmuş süreç nedeniyle olabilir. Zaman aşımı nedeniyle süreç otomatik olarak zorla sonlandırıldı.",
   "TXT_CODE_general_update.cmdFormatErr": "Hatalı güncelleme komutu. Lütfen yöneticinize başvurun.",
   "TXT_CODE_general_update.err": "Hata",
   "TXT_CODE_general_update.error": "Güncelleme Hatası: {{err}}",
