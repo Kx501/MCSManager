@@ -9,6 +9,7 @@ import { INSTANCE_TYPE_TRANSLATION, verifyEULA } from "@/hooks/useInstance";
 import { useScreen } from "@/hooks/useScreen";
 import { t } from "@/lang/i18n";
 import {
+  getInstanceInfo,
   killInstance,
   openInstance,
   restartInstance,
@@ -19,7 +20,7 @@ import { useAppStateStore } from "@/stores/useAppStateStore";
 import { sleep } from "@/tools/common";
 import { reportErrorMsg } from "@/tools/validator";
 import type { LayoutCard } from "@/types";
-import { INSTANCE_CRASH_TIMEOUT, INSTANCE_STATUS } from "@/types/const";
+import { INSTANCE_CRASH_TIMEOUT, INSTANCE_STATUS_CODE, INSTANCE_STATUS } from "@/types/const";
 import {
   ApartmentOutlined,
   BlockOutlined,
@@ -79,6 +80,7 @@ const instanceTypeText = computed(
 );
 
 const { execute: requestOpenInstance, isLoading: isOpenInstanceLoading } = openInstance();
+const { execute: fetchInstanceInfo } = getInstanceInfo();
 
 let checkRunningTimer: NodeJS.Timeout;
 const toOpenInstance = async () => {
@@ -98,17 +100,34 @@ const toOpenInstance = async () => {
       }
     });
 
-    checkRunningTimer = setTimeout(() => {
-      if (terminalHook.isStopped.value) {
-        Modal.error({
-          title: t("TXT_CODE_ac405b50"),
-          content: h("div", [
-            h("p", t("TXT_CODE_3409258a")),
-            h("p", `${t("TXT_CODE_973414e1")}：${instanceInfo.value?.config.startCommand || ""}`),
-            isDockerMode.value &&
-              h("p", `${t("TXT_CODE_44b585c7")}：${instanceInfo.value?.config.docker.image || ""}`)
-          ])
+    checkRunningTimer = setTimeout(async () => {
+      try {
+        const { value: detail } = await fetchInstanceInfo({
+          params: { uuid: instanceId ?? "", daemonId: daemonId ?? "" }
         });
+        if (detail?.status === INSTANCE_STATUS_CODE.STOPPED) {
+          Modal.error({
+            title: t("TXT_CODE_ac405b50"),
+            content: h("div", [
+              h("p", t("TXT_CODE_3409258a")),
+              h("p", `${t("TXT_CODE_973414e1")}：${instanceInfo.value?.config.startCommand || ""}`),
+              isDockerMode.value &&
+                h("p", `${t("TXT_CODE_44b585c7")}：${instanceInfo.value?.config.docker.image || ""}`)
+            ])
+          });
+        }
+      } catch (_) {
+        if (terminalHook.isStopped.value) {
+          Modal.error({
+            title: t("TXT_CODE_ac405b50"),
+            content: h("div", [
+              h("p", t("TXT_CODE_3409258a")),
+              h("p", `${t("TXT_CODE_973414e1")}：${instanceInfo.value?.config.startCommand || ""}`),
+              isDockerMode.value &&
+                h("p", `${t("TXT_CODE_44b585c7")}：${instanceInfo.value?.config.docker.image || ""}`)
+            ])
+          });
+        }
       }
     }, INSTANCE_CRASH_TIMEOUT);
   } catch (error: any) {

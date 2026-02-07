@@ -47,6 +47,7 @@ class InstanceSubsystem extends EventEmitter {
     await sleep(1000 * 5);
     for (const instance of this.instances.values()) {
       if (instance.config.eventTask.autoStart && instance.status() == Instance.STATUS_STOP) {
+        const delaySec = instance.config.eventTask?.autoStartDelaySeconds ?? 10;
         setTimeout(() => {
           instance
             .execPreset("start")
@@ -67,7 +68,7 @@ class InstanceSubsystem extends EventEmitter {
                 })
               );
             });
-        }, 1000 * 10);
+        }, 1000 * delaySec);
       }
     }
   }
