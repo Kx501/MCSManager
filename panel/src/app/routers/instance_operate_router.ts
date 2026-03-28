@@ -199,7 +199,8 @@ router.post(
       const result = await new RemoteRequest(remoteService).request("instance/asynchronous", {
         instanceUuid,
         taskName,
-        parameter
+        parameter,
+        role: ctx.session?.["role"] as ROLE
       });
       ctx.body = result;
     } catch (err) {
@@ -568,7 +569,8 @@ router.post(
       new RemoteRequest(remoteService).request("instance/asynchronous", {
         taskName: "install_instance",
         instanceUuid,
-        parameter: targetPresetConfig
+        parameter: targetPresetConfig,
+        role: ctx.session?.["role"] as ROLE
       });
       ctx.body = true;
     } catch (err) {
