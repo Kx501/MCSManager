@@ -21,7 +21,8 @@ router.get("/remote_services_list", permission({ level: ROLE.ADMIN }), async (ct
       port: remoteService.config.port,
       prefix: remoteService.config.prefix,
       available: remoteService.available,
-      remarks: remoteService.config.remarks
+      remarks: remoteService.config.remarks,
+      excludeFromStats: remoteService.config.excludeFromStats ?? false
     });
   }
   ctx.body = result;
@@ -97,6 +98,7 @@ router.get("/remote_services", permission({ level: ROLE.ADMIN }), async (ctx) =>
       prefix: remoteService.config.prefix,
       available: remoteService.available,
       remarks: remoteService.config.remarks,
+      excludeFromStats: remoteService.config.excludeFromStats ?? false,
       instances: instancesInfo
     });
   }
@@ -118,7 +120,8 @@ router.post(
       ip: parameter.ip,
       prefix: parameter.prefix ?? "",
       remarks: parameter.remarks ?? "",
-      disabled: parameter.disabled ?? false
+      disabled: parameter.disabled ?? false,
+      excludeFromStats: parameter.excludeFromStats ?? false
     });
 
     operationLogger.log("daemon_create", {
@@ -163,6 +166,7 @@ router.put(
       // - If provided, update the disabled state
       // - If undefined, don't update this field (preserve existing state)
       disabled: parameter.disabled,
+      excludeFromStats: parameter.excludeFromStats
     });
 
     operationLogger.log("daemon_config_change", {

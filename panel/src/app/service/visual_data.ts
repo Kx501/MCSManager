@@ -75,6 +75,7 @@ class VisualDataSubsystem {
       // Calculate the total number of instances and the number of running instances
       const remoteInfoList = new Array();
       for (const iterator of RemoteServiceSubsystem.services.entries()) {
+        if (iterator[1].config.excludeFromStats) continue;
         try {
           remoteInfoList.push(await new RemoteRequest(iterator[1]).request("info/overview"));
         } catch (err) {}

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { LayoutCard } from "@/types";
-import { useOverviewChart } from "../hooks/useOverviewChart";
-import { getRandomId } from "@/tools/randId";
-import { watch } from "vue";
 import { useOverviewInfo } from "@/hooks/useOverviewInfo";
+import { getRandomId } from "@/tools/randId";
+import type { LayoutCard } from "@/types";
+import { watch } from "vue";
+import { useOverviewChart } from "../hooks/useOverviewChart";
 import type { JsonData } from "../types/index";
 
 defineProps<{
@@ -23,12 +23,10 @@ watch(state, () => {
     const v = source[key] as JsonData;
     v.time = `${MAX_TIME - Number(key) * 1}s`;
   }
+  const maxRunning = Math.max(...source.map((v) => Number((v as JsonData).runningInstance ?? 0)));
   chart.setOption({
     yAxis: {
-      max:
-        !state.value?.totalInstance || state.value?.totalInstance <= 1
-          ? 1
-          : state.value?.totalInstance
+      max: maxRunning <= 1 ? 1 : maxRunning
     },
     dataset: {
       dimensions: ["time", "runningInstance"],
@@ -42,7 +40,7 @@ watch(state, () => {
   <CardPanel class="CardWrapper" style="height: 100%">
     <template #title>{{ card.title }}</template>
     <template #body>
-      <div :id="domId" :style="{ width: '100%', height: card.height }"></div>
+      <div :id="domId" :style="{ width: '100%', height: '100%' }"></div>
     </template>
   </CardPanel>
 </template>

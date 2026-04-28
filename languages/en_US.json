@@ -1919,6 +1919,8 @@
   "TXT_CODE_NAME": "Name",
   "TXT_CODE_NODE_DISABLED": "Disabled",
   "TXT_CODE_NODE_DISABLED_DESC": "When disabled, the node will be disconnected and will not be used.",
+  "TXT_CODE_NODE_EXCLUDE_FROM_STATS": "Exclude From Statistics",
+  "TXT_CODE_NODE_EXCLUDE_FROM_STATS_DESC": "When enabled, this node is excluded from instance-related statistics (e.g., total instances, running instances, and instance trends); node online counts remain unaffected.",
   "TXT_CODE_NO_DATA": "No Data",
   "TXT_CODE_NO_DOWNLOAD_TASK": "No download tasks yet",
   "TXT_CODE_NO_SEARCH_RESULT": "No search results yet",

@@ -24,6 +24,7 @@ function computeResponseData(v: Ref<IPanelOverviewResponse | undefined>) {
   let totalInstance = 0;
   let runningInstance = 0;
   for (const iterator of currentState.remote || []) {
+    if (iterator.config?.excludeFromStats) continue;
     if (iterator.instance) {
       totalInstance += iterator.instance.total;
       runningInstance += iterator.instance.running;

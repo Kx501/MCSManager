@@ -89,6 +89,8 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
     if (config.apiKey) instance.config.apiKey = config.apiKey;
     if (config.remoteMappings != null) instance.config.remoteMappings = config.remoteMappings;
     if (config.disabled !== undefined) instance.config.disabled = config.disabled;
+    if (config.excludeFromStats !== undefined)
+      instance.config.excludeFromStats = config.excludeFromStats;
 
     // Handle disabled state changes
     if (config.disabled !== undefined) {

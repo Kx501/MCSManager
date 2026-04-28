@@ -1,15 +1,27 @@
-import { init, graphic, type ECharts } from "echarts";
+import { graphic, init, type ECharts } from "echarts";
 import { onMounted, onUnmounted, ref } from "vue";
 
 export function useSimpleChart(dom: string) {
   let chart = ref<ECharts>();
+  let resizeObserver: ResizeObserver | undefined;
+  const handleResize = () => chart.value?.resize();
 
   onMounted(() => {
-    chart.value = init(document.getElementById(dom));
+    const el = document.getElementById(dom);
+    if (!el) return;
+    chart.value = init(el);
     chart.value.setOption(getSimpleChartDefaultOption());
+    window.addEventListener("resize", handleResize);
+    resizeObserver = new ResizeObserver(() => {
+      chart.value?.resize();
+    });
+    resizeObserver.observe(el);
   });
 
   onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+    resizeObserver?.disconnect();
+    resizeObserver = undefined;
     chart.value?.dispose();
     chart.value = undefined;
   });
@@ -22,13 +34,25 @@ export function useSimpleChart(dom: string) {
 
 export function useOverviewChart(dom: string) {
   let chart = ref<ECharts>();
+  let resizeObserver: ResizeObserver | undefined;
+  const handleResize = () => chart.value?.resize();
 
   onMounted(() => {
-    chart.value = init(document.getElementById(dom));
+    const el = document.getElementById(dom);
+    if (!el) return;
+    chart.value = init(el);
     chart.value.setOption(getChartDefaultOption());
+    window.addEventListener("resize", handleResize);
+    resizeObserver = new ResizeObserver(() => {
+      chart.value?.resize();
+    });
+    resizeObserver.observe(el);
   });
 
   onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+    resizeObserver?.disconnect();
+    resizeObserver = undefined;
     chart.value?.dispose();
     chart.value = undefined;
   });

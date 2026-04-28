@@ -42,6 +42,7 @@ router.get("/", permission({ level: ROLE.ADMIN, token: false }), async (ctx) => 
         remoteInfo.config = {};
       }
       remoteInfo.config.disabled = remoteService.config.disabled ?? false;
+      remoteInfo.config.excludeFromStats = remoteService.config.excludeFromStats ?? false;
       return remoteInfo;
     }
   );

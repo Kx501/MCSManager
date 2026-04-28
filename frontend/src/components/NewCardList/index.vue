@@ -30,6 +30,13 @@ const paramsDialog = ref<InstanceType<typeof Params>>();
 
 let cardPool = getCardPool();
 const currentPageRole = route.meta.permission as ROLE;
+const CHART_CARD_TYPES = new Set(["RequestChart", "InstanceChart"]);
+
+const getPreviewCardHeight = (card: NewCardItem) => {
+  // Avoid extremely flat trend chart previews in the card picker.
+  if (CHART_CARD_TYPES.has(card.type)) return "280px";
+  return card.height;
+};
 
 const insertCardToLayout = async (card: NewCardItem) => {
   if (card.permission > currentPageRole) {
@@ -127,8 +134,9 @@ const currentCardCategory = ref<NEW_CARD_TYPE>(NEW_CARD_TYPE.COMMON);
                   :id="'card-card-container-' + card.id"
                   class="card-list-container"
                   :data-id="card.id"
+                  :data-card-type="card.type"
                   :card="card"
-                  :style="{ height: card.height }"
+                  :style="{ height: getPreviewCardHeight(card) }"
                   @click="() => insertCardToLayout(card)"
                 />
               </div>

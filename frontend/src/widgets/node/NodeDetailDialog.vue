@@ -31,6 +31,7 @@ const DEFAULT_CONFIG = {
   daemonPort: 24444,
   remoteMappings: [] as IPanelOverviewRemoteMappingResponse[],
   disabled: false,
+  excludeFromStats: false,
   outputBufferSize: 256,
   enableSoftShutdown: true,
   softShutdownSkipDocker: true,
@@ -104,7 +105,8 @@ const openDialog = (data?: ComputedNodeInfo, uuid?: string) => {
       daemonPort: data.config?.port ?? 24444, // listen port
       apiKey: "",
       remoteMappings: data.remoteMappings ?? [],
-      disabled: (data.config as any)?.disabled ?? false
+      disabled: (data.config as any)?.disabled ?? false,
+      excludeFromStats: (data.config as any)?.excludeFromStats ?? false
     };
   } else {
     editMode.value = false;
@@ -244,6 +246,15 @@ defineExpose({ openDialog });
               </a-typography-text>
             </a-typography-paragraph>
             <a-switch v-model:checked="dialog.data.disabled" />
+          </a-form-item>
+
+          <a-form-item :label="t('TXT_CODE_NODE_EXCLUDE_FROM_STATS')" name="excludeFromStats">
+            <a-typography-paragraph>
+              <a-typography-text type="secondary">
+                {{ t("TXT_CODE_NODE_EXCLUDE_FROM_STATS_DESC") }}
+              </a-typography-text>
+            </a-typography-paragraph>
+            <a-switch v-model:checked="dialog.data.excludeFromStats" />
           </a-form-item>
         </a-form>
       </a-tab-pane>
