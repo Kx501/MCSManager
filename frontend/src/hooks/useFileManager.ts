@@ -247,7 +247,7 @@ export const useFileManager = (instanceId: string = "", daemonId: string = "") =
     unzipmode: "0",
     code: "utf-8",
     ref: ref<VNodeRef>(),
-    ok: () => {},
+    ok: () => { },
     cancel: () => {
       dialog.value.value = "";
     },
@@ -286,7 +286,7 @@ export const useFileManager = (instanceId: string = "", daemonId: string = "") =
         dialog.value.info = "";
         dialog.value.mode = "";
         dialog.value.style = {};
-        dialog.value.ok = () => {};
+        dialog.value.ok = () => { };
       };
     });
   };
@@ -535,99 +535,186 @@ export const useFileManager = (instanceId: string = "", daemonId: string = "") =
 
   const spinning = ref(false);
 
+  type SelectedUploadFile = {
+    file: File;
+    overwrite: boolean;
+  };
+
+  type UploadConflictDecision = {
+    keep: boolean;
+    overwrite: boolean;
+    applyToAll: boolean;
+  };
+
+  const getExistingUploadNames = async (files: SelectedUploadFile[], targetPath: string) => {
+    const targetNames = new Set(files.map((item) => item.file.name));
+    const existingNames = new Set<string>();
+    if (targetNames.size === 0) return existingNames;
+
+    const { execute } = getFileListApi();
+    const pageSize = 100;
+    let page = 0;
+    let total = 0;
+
+    do {
+      const res = await execute({
+        params: {
+          daemonId: daemonId || "",
+          uuid: instanceId || "",
+          page,
+          page_size: pageSize,
+          file_name: "",
+          target: targetPath
+        }
+      });
+
+      const items = res.value?.items || [];
+      total = res.value?.total || 0;
+
+      for (const item of items) {
+        if (!targetNames.has(item.name)) continue;
+        existingNames.add(item.name);
+        targetNames.delete(item.name);
+      }
+
+      page += 1;
+      if (targetNames.size === 0 || items.length === 0) break;
+    } while (page * pageSize < total);
+
+    return existingNames;
+  };
+
+  const countRemainingUploadConflicts = (
+    files: SelectedUploadFile[],
+    startIndex: number,
+    occupiedNames: Set<string>
+  ) => {
+    const simulatedOccupiedNames = new Set(occupiedNames);
+    let count = 0;
+
+    for (let i = startIndex; i < files.length; i++) {
+      const fileName = files[i].file.name;
+      if (simulatedOccupiedNames.has(fileName)) count += 1;
+      simulatedOccupiedNames.add(fileName);
+    }
+
+    return count;
+  };
+
+  const confirmUploadConflict = async (
+    fileName: string,
+    conflictCount: number
+  ): Promise<UploadConflictDecision> => {
+    const all = ref(false);
+    const overwrite = ref(false);
+
+    const keep = await new Promise<boolean>((onComplete) => {
+      Modal.confirm({
+        title: t("TXT_CODE_99ca8563"),
+        icon: createVNode(ExclamationCircleOutlined),
+        content: createVNode(
+          OverwriteFilesPopUpContent,
+          {
+            count: conflictCount,
+            fileName,
+            all,
+            overwrite,
+            "onUpdate:all": (val: boolean) => (all.value = val),
+            "onUpdate:overwrite": (val: boolean) => (overwrite.value = val)
+          },
+          null
+        ),
+        okText: t("TXT_CODE_ae09d79d"),
+        cancelText: t("TXT_CODE_518528d0"),
+        onOk() {
+          onComplete(true);
+        },
+        onCancel() {
+          onComplete(false);
+        }
+      });
+    });
+
+    return {
+      keep,
+      overwrite: overwrite.value,
+      applyToAll: all.value
+    };
+  };
+
   const selectedFiles = async (files: File[], overridePath?: string) => {
     const { state: missionCfg, execute: getUploadMissionCfg } = uploadAddress();
-    const fileSet = new Set(files.map((f) => ({ file: f, overwrite: false })));
-    const existingFiles: typeof fileSet = new Set();
+    const targetPath = overridePath || currentPath.value;
+    const uploadQueue: SelectedUploadFile[] = files.map((file) => ({ file, overwrite: false }));
 
-    for (const f of fileSet) {
-      if (dataSource.value?.find((dataType) => dataType.name === f.file.name)) {
-        existingFiles.add(f);
-      }
-    }
+    try {
+      const occupiedNames = await getExistingUploadNames(uploadQueue, targetPath);
+      const confirmedFiles: SelectedUploadFile[] = [];
+      let sharedDecision: Omit<UploadConflictDecision, "applyToAll"> | undefined;
 
-    for (const f of existingFiles) {
-      const all = ref(false);
-      const overwrite = ref(false);
-      const confirmPromise = new Promise<boolean>((onComplete) => {
-        Modal.confirm({
-          title: t("TXT_CODE_99ca8563"),
-          icon: createVNode(ExclamationCircleOutlined),
-          content: createVNode(
-            OverwriteFilesPopUpContent,
-            {
-              count: existingFiles.size,
-              fileName: f.file.name,
-              all: all,
-              overwrite: overwrite,
-              "onUpdate:all": (val: boolean) => (all.value = val),
-              "onUpdate:overwrite": (val: boolean) => (overwrite.value = val)
-            },
-            null
-          ),
-          okText: t("TXT_CODE_ae09d79d"),
-          cancelText: t("TXT_CODE_518528d0"),
-          onOk() {
-            onComplete(true);
-          },
-          onCancel() {
-            onComplete(false);
-          }
-        });
-      });
-      if (await confirmPromise) {
-        if (all.value) {
-          for (const f of existingFiles) {
-            f.overwrite = overwrite.value;
-          }
-          break;
-        }
-        f.overwrite = overwrite.value;
-        existingFiles.delete(f);
-      } else {
-        // skip
-        if (all.value) {
-          for (const f of existingFiles) {
-            fileSet.delete(f);
-          }
-          break;
-        }
-        existingFiles.delete(f);
-        fileSet.delete(f);
-      }
-    }
+      for (let i = 0; i < uploadQueue.length; i++) {
+        const item = uploadQueue[i];
+        const fileName = item.file.name;
+        const hasConflict = occupiedNames.has(fileName);
 
-    for (const f of fileSet) {
-      try {
-        await getUploadMissionCfg({
-          params: {
-            upload_dir: overridePath || currentPath.value,
-            daemonId: daemonId!,
-            uuid: instanceId!,
-            file_name: f.file.name
-          }
-        });
-        if (!missionCfg.value) throw new Error(t("TXT_CODE_e8ce38c2"));
+        if (hasConflict) {
+          const decision = sharedDecision
+            ? { ...sharedDecision, applyToAll: true }
+            : await confirmUploadConflict(
+              fileName,
+              countRemainingUploadConflicts(uploadQueue, i, occupiedNames)
+            );
 
-        const addr = parseForwardAddress(getFileConfigAddr(missionCfg.value), "http");
-        uploadService.append(
-          f.file,
-          addr,
-          missionCfg.value.password,
-          {
-            overwrite: f.overwrite
-          },
-          (task) => {
-            task.instanceInfo = {
-              instanceId: instanceId || "",
-              daemonId: daemonId || ""
+          if (decision.applyToAll) {
+            sharedDecision = {
+              keep: decision.keep,
+              overwrite: decision.overwrite
             };
           }
-        );
-      } catch (err: any) {
-        console.error(err);
-        return reportErrorMsg(err.response?.data || err.message);
+
+          if (!decision.keep) continue;
+          item.overwrite = decision.overwrite;
+        }
+
+        confirmedFiles.push(item);
+        occupiedNames.add(fileName);
       }
+
+      for (const f of confirmedFiles) {
+        try {
+          await getUploadMissionCfg({
+            params: {
+              upload_dir: targetPath,
+              daemonId: daemonId!,
+              uuid: instanceId!,
+              file_name: f.file.name
+            }
+          });
+          if (!missionCfg.value) throw new Error(t("TXT_CODE_e8ce38c2"));
+
+          const addr = parseForwardAddress(getFileConfigAddr(missionCfg.value), "http");
+          uploadService.append(
+            f.file,
+            addr,
+            missionCfg.value.password,
+            {
+              overwrite: f.overwrite
+            },
+            (task) => {
+              task.instanceInfo = {
+                instanceId: instanceId || "",
+                daemonId: daemonId || ""
+              };
+            }
+          );
+        } catch (err: any) {
+          console.error(err);
+          return reportErrorMsg(err.response?.data || err.message);
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      return reportErrorMsg(err.response?.data || err.message);
     }
   };
 

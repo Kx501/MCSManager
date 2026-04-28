@@ -182,6 +182,7 @@ export const uploadAddress = useDefineApi<
       upload_dir: string;
       daemonId: string;
       uuid: string;
+      file_name?: string;
     };
   },
   {
@@ -197,15 +198,15 @@ export const uploadAddress = useDefineApi<
 export const uploadFile = useDefineApi<
   {
     params:
-      | {
-          overwrite: boolean;
-          filename: string;
-          size: number;
-          sum: string;
-          unzip?: boolean;
-          code?: string;
-        }
-      | { stop: boolean };
+    | {
+      overwrite: boolean;
+      filename: string;
+      size: number;
+      sum: string;
+      unzip?: boolean;
+      code?: string;
+    }
+    | { stop: boolean };
   },
   {
     id?: string;
