@@ -62,6 +62,51 @@ router.get(
 );
 
 // [Top-level Permission]
+// Query global instances from multiple daemons
+router.get(
+  "/remote_services_instances_global",
+  permission({ level: ROLE.ADMIN }),
+  validator({ query: { page: Number, page_size: Number } }),
+  async (ctx) => {
+    const page = Math.max(1, Number(ctx.query.page) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(ctx.query.page_size) || 10));
+    const instanceName = ctx.query.instance_name;
+    const status = ctx.query.status;
+
+    const result: Record<string, any> = {};
+
+    const promises = Array.from(RemoteServiceSubsystem.services.values()).map(
+      async (remoteService) => {
+        try {
+          const instanceResult = await new RemoteRequest(remoteService).request("instance/select", {
+            page: page,
+            pageSize: pageSize,
+            condition: {
+              instanceName,
+              status
+            }
+          });
+          result[remoteService.uuid] = {
+            instances: instanceResult.data || [],
+            maxPage: instanceResult.maxPage || 1,
+            page: instanceResult.page || 1
+          };
+        } catch (err: any) {
+          result[remoteService.uuid] = {
+            instances: [],
+            maxPage: 1,
+            page: 1
+          };
+        }
+      }
+    );
+
+    await Promise.all(promises);
+    ctx.body = result;
+  }
+);
+
+// [Top-level Permission]
 // Get remote server system information
 router.get("/remote_services_system", permission({ level: ROLE.ADMIN }), async (ctx) => {
   const result = new Array();
@@ -207,17 +252,17 @@ router.get(
   async (ctx) => {
     const uuid = String(ctx.request.query.uuid);
     if (!RemoteServiceSubsystem.services.has(uuid)) throw new Error("Instance does not exist");
-    
+
     const remoteService = RemoteServiceSubsystem.getInstance(uuid);
     if (!remoteService) throw new Error("Instance does not exist");
-    
+
     // Check if the node is disabled
     if (remoteService.config.disabled) {
       ctx.status = 400;
       ctx.body = { error: "Node is disabled and cannot be connected" };
       return;
     }
-    
+
     try {
       remoteService.connect();
       ctx.body = true;
