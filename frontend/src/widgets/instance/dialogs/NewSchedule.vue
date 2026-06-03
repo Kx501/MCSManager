@@ -28,7 +28,6 @@ const {
   calculateIntervalFromTime,
   calculateTimeFromCycle,
   parseTaskTime,
-  createState,
   deleteSchedule
 } = useSchedule(props.instanceId, props.daemonId);
 
@@ -105,9 +104,12 @@ const getInputPlaceholder = (action: ScheduleAction) => {
 const submit = async () => {
   try {
     isLoading.value = true;
-    if (editMode.value) await deleteSchedule(newTask.name, false);
-    await create[newTask.type](newTask);
-    if (createState.value) {
+    if (editMode.value) {
+      const deleted = await deleteSchedule(newTask.name, false);
+      if (!deleted) return;
+    }
+    const created = await create[newTask.type](newTask);
+    if (created) {
       emit("getScheduleList");
       notification.success({
         message: editMode.value ? t("TXT_CODE_d3de39b4") : t("TXT_CODE_d28c05df")

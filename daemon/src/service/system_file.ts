@@ -7,8 +7,10 @@ import { compress, decompress } from "../common/compress";
 import { globalConfiguration } from "../entity/config";
 import { $t, i18next } from "../i18n";
 import { normalizedJoin } from "../tools/filepath";
+import { resolveRealPath } from "../tools/path_link_check";
 
 const ERROR_MSG_01 = $t("TXT_CODE_system_file.illegalAccess");
+const ERROR_PATH_NOT_FOUND = $t("TXT_CODE_96281410");
 const MAX_EDIT_SIZE = 1024 * 1024 * 5;
 
 interface IFile {
@@ -41,6 +43,16 @@ export default class FileManager {
     return this.topPath === "/" || this.topPath === "\\";
   }
 
+  private isOutsideWorkspace(absPath: string): boolean {
+    // fix the /app/ vs /app mismatch bug and keep it secure
+    if (this.isRootTopRath()) return false;
+    const realTop = resolveRealPath(this.topPath);
+    const realPath = resolveRealPath(absPath);
+    if (!realTop || !realPath) return true; // If the path cannot be resolved, treat it as outside for safety
+    const relative = path.relative(realTop, realPath);
+    return relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative);
+  }
+
   toAbsolutePath(fileName: string = "") {
     const topAbsolutePath = this.topPath;
 
@@ -60,12 +72,7 @@ export default class FileManager {
       finalPath = path.normalize(path.join(this.topPath, this.cwd, fileName));
     }
 
-    // fix the /app/ vs /app mismatch bug and keep it secure
-    const relative = path.relative(topAbsolutePath, finalPath);
-    const isOutside =
-      relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative);
-    if (isOutside && topAbsolutePath !== "/" && topAbsolutePath !== "\\")
-      throw new Error(ERROR_MSG_01);
+    if (this.isOutsideWorkspace(finalPath)) throw new Error(ERROR_MSG_01);
     return finalPath;
   }
 
@@ -81,6 +88,8 @@ export default class FileManager {
       ? topAbsolutePath.slice(0, -1)
       : topAbsolutePath;
 
+    this.assertInsideWorkspace(destPath);
+
     if (destPath.startsWith(topPath)) {
       const parts = destPath.split(path.sep);
       return topPath.split(path.sep).every((part, index) => {
@@ -90,9 +99,16 @@ export default class FileManager {
     return false;
   }
 
+  assertInsideWorkspace(fileNameOrPath: string) {
+    const absPath = this.toAbsolutePath(fileNameOrPath);
+    if (this.isOutsideWorkspace(absPath)) throw new Error(ERROR_MSG_01);
+  }
+
   check(destPath: string) {
     if (this.isRootTopRath()) return true;
-    return this.checkPath(destPath) && fs.existsSync(this.toAbsolutePath(destPath));
+    if (!this.checkPath(destPath)) return false;
+    if (!fs.existsSync(this.toAbsolutePath(destPath))) throw new Error(ERROR_PATH_NOT_FOUND);
+    return true;
   }
 
   cd(dirName: string) {
@@ -103,19 +119,30 @@ export default class FileManager {
   async list(page: 0, pageSize = 40, searchFileName?: string) {
     if (pageSize > 100 || pageSize <= 0 || page < 0) throw new Error("Beyond the value limit");
 
+    this.assertInsideWorkspace(".");
+
     // Use withFileTypes option to get file type directly, reducing stat calls
     const dirents = await fs.readdir(this.toAbsolutePath(), { withFileTypes: true });
 
     // Filter search results and create basic file info with type
-    let filteredItems = dirents
-      .filter(
-        (dirent) =>
-          !searchFileName || dirent.name.toLowerCase().includes(searchFileName.toLowerCase())
-      )
-      .map((dirent) => ({
-        name: dirent.name,
-        type: dirent.isFile() ? 1 : 0
-      }));
+    let filteredItems = await Promise.all(
+      dirents
+        .filter(
+          (dirent) =>
+            !searchFileName || dirent.name.toLowerCase().includes(searchFileName.toLowerCase())
+        )
+        .map(async (dirent) => {
+          let type = dirent.isFile() ? 1 : 0;
+          if (type === 0 && !dirent.isDirectory()) {
+            // Symbolic links may return false for both isFile() and isDirectory()
+            // see #2124
+            try {
+              type = (await fs.stat(this.toAbsolutePath(dirent.name))).isFile() ? 1 : 0;
+            } catch {}
+          }
+          return { name: dirent.name, type };
+        })
+    );
 
     const total = filteredItems.length;
 
@@ -195,7 +222,9 @@ export default class FileManager {
     // if (!FileManager.checkFileName(fileName)) throw new Error(ERROR_MSG_01);
     if (!this.checkPath(fileName)) throw new Error(ERROR_MSG_01);
     const target = this.toAbsolutePath(fileName);
-    fs.createFile(target);
+    const parentDir = path.resolve(path.dirname(target));
+    if (parentDir !== path.parse(parentDir).root) await fs.mkdir(parentDir, { recursive: true });
+    return await fs.createFile(target);
   }
 
   async copy(target1: string, target2: string) {
@@ -208,7 +237,7 @@ export default class FileManager {
   mkdir(target: string) {
     if (!this.checkPath(target)) throw new Error(ERROR_MSG_01);
     const targetPath = this.toAbsolutePath(target);
-    return fs.mkdirSync(targetPath);
+    return fs.mkdirSync(targetPath, { recursive: true });
   }
 
   async delete(target: string): Promise<boolean> {
@@ -230,13 +259,6 @@ export default class FileManager {
     await fs.move(targetPath, destPath);
   }
 
-  private zipFileCheck(path: string) {
-    const fileInfo = fs.statSync(path);
-    const MAX_ZIP_GB = globalConfiguration.config.maxZipFileSize;
-    if (fileInfo.size > 1024 * 1024 * 1024 * MAX_ZIP_GB)
-      throw new Error($t("TXT_CODE_system_file.unzipLimit", { max: MAX_ZIP_GB }));
-  }
-
   async unzip(sourceZip: string, destDir: string, code?: string) {
     if (!code) code = this.fileCode;
     if (!this.check(sourceZip) || !this.checkPath(destDir)) throw new Error(ERROR_MSG_01);
@@ -253,12 +275,12 @@ export default class FileManager {
     const filesPath = [];
     let totalSize = 0;
     for (const iterator of files) {
-      if (this.check(iterator)) {
-        filesPath.push(this.toAbsolutePath(iterator));
-        try {
+      try {
+        if (this.check(iterator)) {
+          filesPath.push(this.toAbsolutePath(iterator));
           totalSize += fs.statSync(this.toAbsolutePath(iterator))?.size;
-        } catch (error: any) {}
-      }
+        }
+      } catch (error: any) {}
     }
     if (totalSize > MAX_TOTAL_FIELS_SIZE)
       throw new Error($t("TXT_CODE_system_file.unzipLimit", { max: MAX_ZIP_GB }));
@@ -294,5 +316,12 @@ export default class FileManager {
       if (fileName.includes(ch)) return false;
     }
     return true;
+  }
+
+  private zipFileCheck(path: string) {
+    const fileInfo = fs.statSync(path);
+    const MAX_ZIP_GB = globalConfiguration.config.maxZipFileSize;
+    if (fileInfo.size > 1024 * 1024 * 1024 * MAX_ZIP_GB)
+      throw new Error($t("TXT_CODE_system_file.unzipLimit", { max: MAX_ZIP_GB }));
   }
 }

@@ -17,7 +17,8 @@ export function useSchedule(instanceId: string, daemonId: string) {
         },
         data: {
           enabled
-        }
+        },
+        forceRequest: true
       });
       
       // Wait for API response to complete
@@ -47,17 +48,17 @@ export function useSchedule(instanceId: string, daemonId: string) {
     }
   };
 
-  const createTaskTypeInterval = async (newTask: ScheduleTaskForm) => {
+  const createTaskTypeInterval = async (newTask: ScheduleTaskForm): Promise<boolean> => {
     const arr = newTask.cycle;
     let ps = Number(arr[0]);
     let pm = Number(arr[1]);
     let ph = Number(arr[2]);
     const rs = ps + pm * 60 + ph * 60 * 60;
     newTask.time = rs.toString();
-    await createTask(newTask);
+    return await createTask(newTask);
   };
 
-  const createTaskTypeCycle = async (newTask: ScheduleTaskForm) => {
+  const createTaskTypeCycle = async (newTask: ScheduleTaskForm): Promise<boolean> => {
     const weekend = newTask.weekend;
     if (!newTask.objTime) throw new Error(t("TXT_CODE_349edc57"));
     if (weekend.length === 0) throw new Error(t("TXT_CODE_2fe0cc84"));
@@ -66,10 +67,10 @@ export function useSchedule(instanceId: string, daemonId: string) {
     const m = time.minute();
     const s = time.second();
     newTask.time = `${s} ${m} ${h} * * ${weekend.join(",")}`;
-    await createTask(newTask);
+    return await createTask(newTask);
   };
 
-  const createTaskTypeSpecify = async (newTask: ScheduleTaskForm) => {
+  const createTaskTypeSpecify = async (newTask: ScheduleTaskForm): Promise<boolean> => {
     if (!newTask.objTime) throw new Error(t("TXT_CODE_349edc57"));
     const time = newTask.objTime;
     const mm = time.month() + 1;
@@ -78,7 +79,7 @@ export function useSchedule(instanceId: string, daemonId: string) {
     const m = time.minute();
     const s = time.second();
     newTask.time = `${s} ${m} ${h} ${dd} ${mm} *`;
-    await createTask(newTask);
+    return await createTask(newTask);
   };
 
   const calculateIntervalFromTime = (time: string): string[] => {
@@ -141,20 +142,23 @@ export function useSchedule(instanceId: string, daemonId: string) {
     return objTime;
   };
 
-  const { state: createState, execute: create } = scheduleCreate();
-  const createTask = async (newTask: ScheduleTaskForm) => {
+  const { execute: create } = scheduleCreate();
+  const createTask = async (newTask: ScheduleTaskForm): Promise<boolean> => {
     try {
       if (!newTask.count) newTask.count = -1;
-      await create({
+      const stateRef = await create({
         params: {
           daemonId: daemonId,
           uuid: instanceId
         },
-        data: newTask
+        data: newTask,
+        forceRequest: true
       });
+      return stateRef?.value === true;
     } catch (err: any) {
       console.error(err);
       reportErrorMsg(err.message);
+      return false;
     }
   };
 
@@ -165,7 +169,8 @@ export function useSchedule(instanceId: string, daemonId: string) {
         params: {
           daemonId: daemonId ?? "",
           uuid: instanceId ?? ""
-        }
+        },
+        forceRequest: true
       });
     } catch (err: any) {
       console.error(err);
@@ -173,23 +178,27 @@ export function useSchedule(instanceId: string, daemonId: string) {
     }
   };
 
-  const deleteSchedule = async (name: string, showMsg: boolean = true) => {
-    const { execute, state } = scheduleDelete();
+  const deleteSchedule = async (name: string, showMsg: boolean = true): Promise<boolean> => {
+    const { execute } = scheduleDelete();
     try {
-      await execute({
+      const stateRef = await execute({
         params: {
           daemonId: daemonId ?? "",
           uuid: instanceId ?? "",
           task_name: name
-        }
+        },
+        forceRequest: true
       });
-      if (state.value) {
+      const ok = stateRef?.value === true;
+      if (ok) {
         showMsg && message.success(t("TXT_CODE_28190dbc"));
-        getScheduleList();
+        await getScheduleList();
       }
+      return ok;
     } catch (err: any) {
       console.error(err);
       reportErrorMsg(err.message);
+      return false;
     }
   };
 
@@ -203,7 +212,6 @@ export function useSchedule(instanceId: string, daemonId: string) {
     parseTaskTime,
 
     createTask,
-    createState,
 
     getScheduleList,
     scheduleListLoading,
