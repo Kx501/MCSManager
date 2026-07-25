@@ -3,6 +3,8 @@ import { GlobalVariable } from "mcsmanager-common";
 import { $t } from "../i18n";
 import { getUuidByApiKey, ILLEGAL_ACCESS_KEY, isAjax, logout } from "../service/passport_service";
 import userSystem from "../service/user_service";
+import { systemConfig } from "../setting";
+import { checkSafeName } from "../utils/safe";
 
 /**
  * @description Request speed limit, 8 requests per second
@@ -44,6 +46,12 @@ function apiError(ctx: Koa.ParameterizedContext) {
   ctx.body = `${$t("TXT_CODE_permission.apiError")}`;
 }
 
+function disabledApiKey(ctx: Koa.ParameterizedContext) {
+  ctx.status = 403;
+  ctx.body = `The administrator has disabled the use of the API key. 
+Please contact the administrator and set "enableApiKey" to "true" in the configuration file to enable normal use of the API endpoints.`;
+}
+
 function tooFast(ctx: Koa.ParameterizedContext) {
   ctx.status = 500;
   ctx.body = `${$t("TXT_CODE_permission.tooFast")}`;
@@ -71,7 +79,15 @@ export default (parameter: IPermissionCfg) => {
     // If it is an API request, perform API-level permission judgment
     const key = ctx.request?.header["x-request-api-key"] || ctx.query.apikey;
     if (key) {
+      const enableApiKey = systemConfig?.enableApiKey || false;
+      if (!enableApiKey) return disabledApiKey(ctx);
+
+      // Validate apiKey: only A-Z, a-z, 0-9 are allowed
       const apiKey = String(key);
+      if (!checkSafeName(apiKey)) {
+        return apiError(ctx);
+      }
+
       const user = getUuidByApiKey(apiKey);
       if (user && user.permission >= Number(parameter.level)) {
         return await next();

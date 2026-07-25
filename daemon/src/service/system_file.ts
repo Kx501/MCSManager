@@ -107,7 +107,7 @@ export default class FileManager {
   check(destPath: string) {
     if (this.isRootTopRath()) return true;
     if (!this.checkPath(destPath)) return false;
-    if (!fs.existsSync(this.toAbsolutePath(destPath))) throw new Error(ERROR_PATH_NOT_FOUND);
+    if (!fs.existsSync(this.toAbsolutePath(destPath))) return false;
     return true;
   }
 
@@ -138,7 +138,7 @@ export default class FileManager {
             // see #2124
             try {
               type = (await fs.stat(this.toAbsolutePath(dirent.name))).isFile() ? 1 : 0;
-            } catch {}
+            } catch { }
           }
           return { name: dirent.name, type };
         })
@@ -280,7 +280,7 @@ export default class FileManager {
           filesPath.push(this.toAbsolutePath(iterator));
           totalSize += fs.statSync(this.toAbsolutePath(iterator))?.size;
         }
-      } catch (error: any) {}
+      } catch (error: any) { }
     }
     if (totalSize > MAX_TOTAL_FIELS_SIZE)
       throw new Error($t("TXT_CODE_system_file.unzipLimit", { max: MAX_ZIP_GB }));
