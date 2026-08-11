@@ -4,6 +4,7 @@ import * as fs from "fs-extra";
 import path from "path";
 import { v4 } from "uuid";
 import FileManager from "../../../../daemon/src/service/system_file";
+import { diffConfig } from "../common/config_diff";
 import { MARKET_CACHE_FILE_PATH, SAVE_DIR_PATH } from "../const";
 import SystemConfig from "../entity/setting";
 import { ROLE } from "../entity/user";
@@ -16,7 +17,7 @@ import {
   setFrontendLayoutConfig
 } from "../service/frontend_layout";
 import { logger } from "../service/log";
-import { operationLogger } from "../service/operation_logger";
+import { getOperationLoggerOperator, operationLogger } from "../service/operation_logger";
 import remoteService from "../service/remote_service";
 import userSystem from "../service/user_service";
 import { saveSystemConfig, systemConfig } from "../setting";
@@ -27,7 +28,11 @@ const router = new Router({ prefix: "/overview" });
 // [Top-level Permission]
 // Get panel configuration items
 router.get("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
-  ctx.body = systemConfig;
+  if (!systemConfig) {
+    ctx.body = systemConfig;
+    return;
+  }
+  ctx.body = { ...systemConfig, ssoClientSecret: "" };
 });
 
 // [Top-level Permission]
@@ -35,6 +40,8 @@ router.get("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
 router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
   const config = ctx.request.body as Partial<SystemConfig>;
   if (config && systemConfig) {
+    // Snapshot for the audit log (masked diff is computed after all mutations)
+    const systemConfigBefore = JSON.parse(JSON.stringify(systemConfig)) as SystemConfig;
     if (config.httpIp != null) systemConfig.httpIp = config.httpIp;
     if (config.httpPort != null) systemConfig.httpPort = config.httpPort;
     if (config.prefix != null) systemConfig.prefix = config.prefix;
@@ -60,7 +67,26 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
     if (config.allowChangeCmd != null) systemConfig.allowChangeCmd = Boolean(config.allowChangeCmd);
     if (config.registerCode != null) systemConfig.registerCode = String(config.registerCode);
     if (config.panelId != null) systemConfig.panelId = String(config.panelId);
-    if (config.enableApiKey != null) systemConfig.enableApiKey = Boolean(config.enableApiKey);
+    if (config.enableApiKey != null) systemConfig.enableApiKey = config.enableApiKey;
+
+    if (config.operationLogEnabled != null)
+      systemConfig.operationLogEnabled = config.operationLogEnabled;
+    if (config.operationLogMaxLinesPerFile != null)
+      systemConfig.operationLogMaxLinesPerFile = config.operationLogMaxLinesPerFile;
+    if (config.operationLogKeepDays != null)
+      systemConfig.operationLogKeepDays = config.operationLogKeepDays;
+    if (config.operationLogMaxTotalLines != null)
+      systemConfig.operationLogMaxTotalLines = config.operationLogMaxTotalLines;
+    if (config.operationLogRecordLogin != null)
+      systemConfig.operationLogRecordLogin = config.operationLogRecordLogin;
+    if (config.operationLogRecordInstance != null)
+      systemConfig.operationLogRecordInstance = config.operationLogRecordInstance;
+    if (config.operationLogRecordFile != null)
+      systemConfig.operationLogRecordFile = config.operationLogRecordFile;
+    if (config.operationLogRecordUser != null)
+      systemConfig.operationLogRecordUser = config.operationLogRecordUser;
+    if (config.operationLogRecordSystem != null)
+      systemConfig.operationLogRecordSystem = config.operationLogRecordSystem;
 
     if (config.presetPackAddr != null) {
       // clear cache
@@ -91,31 +117,48 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
     }
     const ssoType = systemConfig.ssoType || "oidc";
 
+    // SSO Token Endpoint client authentication method
+    if (config.ssoTokenAuthMethod != null) {
+      const m = String(config.ssoTokenAuthMethod);
+      if (m !== "auto" && m !== "client_secret_basic" && m !== "client_secret_post") {
+        throw new Error(
+          "ssoTokenAuthMethod must be 'auto', 'client_secret_basic' or 'client_secret_post'"
+        );
+      }
+      systemConfig.ssoTokenAuthMethod = m;
+    }
+
     // SSO core fields
     {
       const wantEnable =
         config.ssoEnabled != null ? Boolean(config.ssoEnabled) : systemConfig.ssoEnabled;
       const clientId =
         config.ssoClientId != null ? String(config.ssoClientId) : systemConfig.ssoClientId;
-      const clientSecret =
-        config.ssoClientSecret != null
-          ? String(config.ssoClientSecret)
-          : systemConfig.ssoClientSecret;
+      const clientSecret = config.ssoClientSecret
+        ? String(config.ssoClientSecret)
+        : systemConfig.ssoClientSecret;
 
       if (ssoType === "oidc") {
         const issuer = config.ssoIssuer != null ? String(config.ssoIssuer) : systemConfig.ssoIssuer;
-        if (issuer && !issuer.startsWith("https://") && !issuer.startsWith("http://")) {
-          throw new Error("SSO Issuer URL must use http(s) protocol");
+        if (issuer && !issuer.startsWith("https://")) {
+          throw new Error("SSO Issuer URL must use the https protocol");
         }
         if (wantEnable && (!issuer?.trim() || !clientId?.trim() || !clientSecret?.trim())) {
           throw new Error(
             "Cannot enable SSO (OIDC): Issuer, Client ID, and Client Secret are required"
           );
         }
-        if (issuer?.trim() && clientId?.trim() && clientSecret?.trim()) {
-          const { verifyIssuer, clearOIDCCache } = require("../service/sso_service");
+        const oidcCredentialsChanged =
+          issuer !== systemConfig.ssoIssuer ||
+          clientId !== systemConfig.ssoClientId ||
+          clientSecret !== systemConfig.ssoClientSecret;
+        const needVerify =
+          wantEnable &&
+          Boolean(issuer?.trim() && clientId?.trim() && clientSecret?.trim()) &&
+          (!systemConfig.ssoEnabled || oidcCredentialsChanged);
+        if (needVerify) {
+          const { verifyIssuer } = require("../service/sso_service");
           await verifyIssuer(issuer, clientId, clientSecret);
-          clearOIDCCache();
         }
         if (config.ssoIssuer != null) systemConfig.ssoIssuer = issuer;
       } else {
@@ -160,7 +203,7 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
 
       if (config.ssoEnabled != null) systemConfig.ssoEnabled = wantEnable;
       if (config.ssoClientId != null) systemConfig.ssoClientId = clientId;
-      if (config.ssoClientSecret != null) systemConfig.ssoClientSecret = clientSecret;
+      if (config.ssoClientSecret) systemConfig.ssoClientSecret = clientSecret;
     }
 
     if (config.ssoUserIdField != null)
@@ -208,13 +251,23 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
       systemConfig.ssoCallbackUrl = cbUrl;
     }
 
-    operationLogger.log("system_config_change", {
-      operator_ip: ctx.ip,
-      operator_name: ctx.session?.["userName"]
-    });
+    const diff = diffConfig(systemConfigBefore, JSON.parse(JSON.stringify(systemConfig)));
+    if (diff) {
+      operationLogger.log(
+        "system_config_change",
+        {
+          ...getOperationLoggerOperator(ctx),
+          config_before: diff.before,
+          config_after: diff.after
+        },
+        "warning",
+        config.operationLogEnabled !== systemConfigBefore.operationLogEnabled
+      );
+    }
 
     saveSystemConfig(systemConfig);
     checkBusinessMode();
+    operationLogger.runRetention();
     ctx.body = "OK";
     return;
   }
