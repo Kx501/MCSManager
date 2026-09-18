@@ -12,6 +12,7 @@ import path from "path";
 import { EventEmitter } from "stream";
 import { IInstanceProcess } from "../entity/instance/interface";
 import { $t } from "../i18n";
+import { resolveDockerWorkspacePath } from "../tools/docker_workspace_path";
 import { AsyncTask } from "./async_task_service";
 import logger from "./log";
 import { NetworkLimitService } from "./network_limit_service";
@@ -341,9 +342,7 @@ export class SetupDockerContainer extends AsyncTask {
     let cwd = instance.absoluteCwdPath();
     const defaultInstanceDir = InstanceSubsystem.getInstanceDataDir();
     const hostRealPath = toText(process.env.MCSM_DOCKER_WORKSPACE_PATH);
-    if (hostRealPath && cwd.includes(defaultInstanceDir)) {
-      cwd = path.normalize(path.join(hostRealPath, instance.instanceUuid));
-    }
+    cwd = resolveDockerWorkspacePath(cwd, defaultInstanceDir, hostRealPath);
 
     const mounts: Docker.MountConfig = [];
     for (const v of extraBinds) {
@@ -409,10 +408,10 @@ export class SetupDockerContainer extends AsyncTask {
     let entrypoint: string | string[] | undefined = commandList.length ? commandList[0] : undefined;
     const startCmd = commandList.length > 1 ? commandList.slice(1) : undefined;
 
-    // Compatible with Docker API v29+: Entrypoint must be an array type
+    // Always send Entrypoint as an array: Docker accepts the array form on every API version (and requires it
+    // from v29), while Podman's Docker-compatible API rejects a plain string whatever version it reports.
     const { Version: dockerVersion } = await docker.version();
-    const versionNum = dockerVersion.split(".")[0];
-    if (Number(versionNum.replace("v", "")) >= 29 && entrypoint !== undefined) {
+    if (entrypoint !== undefined) {
       entrypoint = [entrypoint];
     }
 
@@ -493,10 +492,13 @@ export class SetupDockerContainer extends AsyncTask {
         Privileged: privileged,
         DeviceRequests: gpuDeviceRequests
       },
-      // Only set NetworkingConfig for non-host network modes
-      // host mode uses the host's network stack and doesn't support EndpointsConfig
+      // Only set NetworkingConfig for user-defined networks.
+      // host/none don't support EndpointsConfig, and the default "bridge" network needs none (network-scoped
+      // aliases only work on user-defined networks); Podman's Docker-compatible API cannot resolve "bridge" by name
+      // in EndpointsConfig.
       ...(dockerConfig.networkMode !== "host" &&
-        dockerConfig.networkMode !== "none" && {
+        dockerConfig.networkMode !== "none" &&
+        (dockerConfig.networkMode || "bridge") !== "bridge" && {
           NetworkingConfig: {
             EndpointsConfig: {
               [dockerConfig.networkMode || "bridge"]: {

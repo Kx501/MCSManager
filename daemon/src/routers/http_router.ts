@@ -224,13 +224,13 @@ router.post("/upload-piece/:id", async (ctx) => {
     const chunk = await fs.readFile(uploadedFile.filepath);
     await writer.write(offset, chunk);
 
-    if (tmpFiles) clearUploadFiles(tmpFiles);
-
     ctx.body = "OK";
     return;
   } catch (error: any) {
     ctx.body = error.message;
     ctx.status = 500;
+  } finally {
+    if (tmpFiles) clearUploadFiles(tmpFiles);
   }
 });
 

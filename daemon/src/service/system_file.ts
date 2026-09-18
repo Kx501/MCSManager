@@ -241,12 +241,14 @@ export default class FileManager {
     return fs.mkdirSync(targetPath, { recursive: true });
   }
 
-  async delete(target: string): Promise<boolean> {
-    if (!this.check(target)) throw new Error(ERROR_MSG_01);
+  async delete(target: string, options: { ignoreMissing?: boolean } = {}): Promise<boolean> {
+    if (!this.checkPath(target)) throw new Error(ERROR_MSG_01);
     const targetPath = this.toAbsolutePath(target);
+    if (!options.ignoreMissing && !fs.existsSync(targetPath)) throw new Error(ERROR_MSG_01);
     return new Promise((r, j) => {
       fs.remove(targetPath, (err) => {
-        if (!err) r(true);
+        if (!err || (options.ignoreMissing && (err as NodeJS.ErrnoException).code === "ENOENT"))
+          r(true);
         else j(err);
       });
     });

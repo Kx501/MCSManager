@@ -44,6 +44,14 @@ module.exports = {
         test: /\.ts/,
         use: "ts-loader",
         exclude: /node_modules/
+      },
+      {
+        // formidable v2 (nested inside koa-body) loads its plugins via a dynamic
+        // `require(path.join(...))` that webpack cannot trace. This loader rewrites
+        // it into a statically-analyzable form so the plugin files get bundled into
+        // app.js. See webpack/formidable-plugin.loader.js.
+        test: /node_modules[\\/](?:koa-body[\\/]node_modules[\\/])?formidable[\\/]src[\\/]Formidable\.js$/,
+        loader: path.resolve(__dirname, "webpack/formidable-plugin.loader.js")
       }
     ]
   },

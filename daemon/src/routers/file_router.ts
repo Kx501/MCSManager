@@ -276,13 +276,11 @@ routerApp.on("file/delete", async (ctx, data) => {
       const uploadTask = uploadManager.getByPath(path);
       const downloadTask = downloadManager.tasks.find((t) => t.path === path);
       if (uploadTask != undefined) {
-        uploadManager.delete(uploadTask.id);
-        uploadTask.writer.stop();
+        await uploadTask.writer.stop();
       } else if (downloadTask != undefined) {
         downloadManager.stop(path);
       } else {
-        // async delete
-        fileManager.delete(target);
+        await fileManager.delete(target, { ignoreMissing: true });
       }
     }
     protocol.response(ctx, true);
