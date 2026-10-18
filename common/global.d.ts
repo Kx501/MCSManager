@@ -181,8 +181,6 @@ declare global {
       portRangeEnd: number;
       portAssignInterval: number;
       port: number;
-      disabled?: boolean;
-      excludeFromStats?: boolean;
       outputBufferSize: number;
       enableSoftShutdown: boolean;
       softShutdownSkipDocker: boolean;

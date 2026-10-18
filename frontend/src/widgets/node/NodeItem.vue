@@ -65,12 +65,6 @@ if (props.card) {
 }
 
 const tryConnectNode = async (node: ComputedNodeInfo, showMsg = true) => {
-  // Check if the node is disabled
-  if ((node.config as any)?.disabled) {
-    reportErrorMsg(t("TXT_CODE_NODE_DISABLED_DESC"));
-    return;
-  }
-
   const { execute } = connectNode();
   try {
     await execute({

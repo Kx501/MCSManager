@@ -22,8 +22,7 @@ router.get("/remote_services_list", permission({ level: ROLE.ADMIN }), async (ct
       port: remoteService.config.port,
       prefix: remoteService.config.prefix,
       available: remoteService.available,
-      remarks: remoteService.config.remarks,
-      excludeFromStats: remoteService.config.excludeFromStats ?? false
+      remarks: remoteService.config.remarks
     });
   }
   ctx.body = result;
@@ -144,7 +143,6 @@ router.get("/remote_services", permission({ level: ROLE.ADMIN }), async (ctx) =>
       prefix: remoteService.config.prefix,
       available: remoteService.available,
       remarks: remoteService.config.remarks,
-      excludeFromStats: remoteService.config.excludeFromStats ?? false,
       instances: instancesInfo
     });
   }
@@ -165,9 +163,7 @@ router.post(
       port: parameter.port,
       ip: parameter.ip,
       prefix: parameter.prefix ?? "",
-      remarks: parameter.remarks ?? "",
-      disabled: parameter.disabled ?? false,
-      excludeFromStats: parameter.excludeFromStats ?? false
+      remarks: parameter.remarks ?? ""
     });
 
     operationLogger.log("daemon_create", {
@@ -219,12 +215,7 @@ router.put(
       prefix: parameter.prefix ?? "",
       apiKey: parameter.apiKey,
       remarks: parameter.remarks,
-      remoteMappings: parameter.remoteMappings ?? [],
-      // Note: disabled is passed without default value to follow RESTful pattern:
-      // - If provided, update the disabled state
-      // - If undefined, don't update this field (preserve existing state)
-      disabled: parameter.disabled,
-      excludeFromStats: parameter.excludeFromStats
+      remoteMappings: parameter.remoteMappings ?? []
     });
     const configAfter = snapshotDaemonConfig(uuid);
 
@@ -282,13 +273,6 @@ router.get(
 
     const remoteService = RemoteServiceSubsystem.getInstance(uuid);
     if (!remoteService) throw new Error("Instance does not exist");
-
-    // Check if the node is disabled
-    if (remoteService.config.disabled) {
-      ctx.status = 400;
-      ctx.body = { error: "Node is disabled and cannot be connected" };
-      return;
-    }
 
     try {
       remoteService.connect();

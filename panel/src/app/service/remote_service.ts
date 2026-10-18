@@ -22,10 +22,7 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
       )) as RemoteServiceConfig;
       const newService = new RemoteService(uuid, config);
       this.setInstance(uuid, newService);
-      // Only connect if the node is not disabled
-      if (!config.disabled) {
-        newService.connect();
-      }
+      newService.connect();
     }
 
     // If there is no daemon process, check whether there is a daemon process locally
@@ -49,10 +46,7 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
     const instance = await this.newInstance(config);
     if (!instance) throw new Error($t("TXT_CODE_3bfb9e04"));
     await Storage.getStorage().store("RemoteServiceConfig", instance.uuid, instance.config);
-    // Only connect if the node is not disabled
-    if (!instance.config.disabled) {
-      instance.connect();
-    }
+    instance.connect();
     return instance;
   }
 
@@ -81,27 +75,12 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
   async edit(uuid: string, config: IRemoteService) {
     const instance = this.getInstance(uuid);
     if (!instance) return;
-    const wasDisabled = instance.config.disabled;
     if (config.remarks) instance.config.remarks = config.remarks;
     if (config.ip) instance.config.ip = config.ip;
     if (config.port) instance.config.port = config.port;
     if (config.prefix != null) instance.config.prefix = config.prefix;
     if (config.apiKey) instance.config.apiKey = config.apiKey;
     if (config.remoteMappings != null) instance.config.remoteMappings = config.remoteMappings;
-    if (config.disabled !== undefined) instance.config.disabled = config.disabled;
-    if (config.excludeFromStats !== undefined)
-      instance.config.excludeFromStats = config.excludeFromStats;
-
-    // Handle disabled state changes
-    if (config.disabled !== undefined) {
-      if (config.disabled && !wasDisabled) {
-        // Node was enabled, now disabled: disconnect
-        instance.disconnect();
-      } else if (!config.disabled && wasDisabled) {
-        // Node was disabled, now enabled: connect
-        instance.connect();
-      }
-    }
 
     await Storage.getStorage().store("RemoteServiceConfig", instance.uuid, instance.config);
   }
@@ -149,7 +128,7 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
   // Periodic connection status check
   connectionStatusCheckTask() {
     this.services?.forEach((v) => {
-      if (v && v.available === false && !v.config.disabled) {
+      if (v && v.available === false) {
         logger.warn(
           `Daemon exception detected: ${v.config.remarks} ${v.config.ip}:${v.config.port}, reconnecting...`
         );
@@ -161,10 +140,6 @@ class RemoteServiceSubsystem extends UniversalRemoteSubsystem<RemoteService> {
   changeDaemonLanguage(language: string) {
     for (const iterator of this.services.entries()) {
       const service = iterator[1];
-      // Skip disabled nodes - they are not connected and cannot receive language updates
-      if (service.config.disabled) {
-        continue;
-      }
       service.setLanguage(language);
     }
   }

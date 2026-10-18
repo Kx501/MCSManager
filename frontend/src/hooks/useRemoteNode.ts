@@ -92,15 +92,11 @@ export function useRemoteNode() {
       },
       data
     });
-    // Only try to connect if the node is not disabled
-    // If disabled, the backend will handle disconnection automatically
-    if (!data.disabled) {
-      await tryConnectNode({
-        params: {
-          uuid
-        }
-      });
-    }
+    await tryConnectNode({
+      params: {
+        uuid
+      }
+    });
     await refresh(true);
   };
 

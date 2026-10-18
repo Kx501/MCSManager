@@ -60,8 +60,6 @@ export interface IRemoteService {
   remarks?: string;
   apiKey?: string;
   remoteMappings?: RemoteMappingEntry[];
-  disabled?: boolean;
-  excludeFromStats?: boolean;
 }
 
 // @Entity
@@ -72,8 +70,6 @@ export class RemoteServiceConfig {
   public remarks = "";
   public apiKey = "";
   public remoteMappings: RemoteMappingEntry[] = [];
-  public disabled = false;
-  public excludeFromStats = false;
 
   connectOpts: Partial<SocketOptions & ManagerOptions> = {
     multiplex: false,
