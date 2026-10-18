@@ -14,10 +14,12 @@ import { getOperationLoggerOperator, operationLogger } from "../service/operatio
 import { getUserUuid } from "../service/passport_service";
 import { timeUuid } from "../service/password";
 import { isHaveInstanceByUuid, isTopPermissionByUuid } from "../service/permission_service";
-import RemoteRequest from "../service/remote_command";
+import RemoteRequest, { INSTANCE_KILL_TIMEOUT } from "../service/remote_command";
 import RemoteServiceSubsystem from "../service/remote_service";
 import userSystem from "../service/user_service";
 import { systemConfig } from "../setting";
+import GatewayToken from "../service/gateway_token";
+import { browserFacingAddr } from "../service/proxy_addr";
 
 const router = new Router({ prefix: "/instance" });
 
@@ -92,6 +94,22 @@ router.post(
         ...getOperationLoggerOperator(ctx),
         instance_name: result.nickname
       });
+      if (systemConfig?.dataPlane === "proxy") {
+        const token = GatewayToken.issueProxyToken({
+          daemonId,
+          instanceUuid: newInstanceUuid,
+          op: "upload",
+          target: ".",
+          ttlSec: 120
+        });
+        ctx.body = {
+          instanceUuid: newInstanceUuid,
+          password: token,
+          addr: browserFacingAddr(ctx),
+          remoteMappings: []
+        };
+        return;
+      }
       // Send a cross-end file upload task to the daemon
       const addr = remoteService.config.fullAddr;
       const remoteMappings = remoteService.config.getConvertedRemoteMappings();
@@ -249,7 +267,7 @@ router.post("/multi_kill", permission({ level: ROLE.ADMIN }), async (ctx) => {
     multiOperationForwarding(instances, async (daemonId: string, instanceUuids: string[]) => {
       const remoteService = RemoteServiceSubsystem.getInstance(daemonId);
       new RemoteRequest(remoteService)
-        .request("instance/kill", { instanceUuids })
+        .request("instance/kill", { instanceUuids }, INSTANCE_KILL_TIMEOUT)
         .then((e) => {
           e.instances.forEach((instance: { instanceUuid: string; nickname: string }) => {
             operationLogger.warning("instance_kill", {

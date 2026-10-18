@@ -75,6 +75,7 @@ export interface Settings {
   reverseProxyHeader: string;
   dataPort: number;
   forwardType: number;
+  dataPlane: "direct" | "proxy";
   crossDomain: boolean;
   gzip: boolean;
   maxCompress: number;
@@ -113,6 +114,8 @@ export interface Settings {
   operationLogRecordFile: boolean;
   operationLogRecordUser: boolean;
   operationLogRecordSystem: boolean;
+  // Auto update (panel self-update)
+  updateSourceUrl: string;
 }
 
 export interface ImageInfo {

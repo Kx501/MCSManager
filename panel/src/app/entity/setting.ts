@@ -16,6 +16,15 @@ export default class SystemConfig {
   // Distributed forwarding mode
   forwardType: number = 1;
 
+  // Data-plane mode: "direct" (browser connects to the daemon directly, default, legacy behavior)
+  // or "proxy" (browser only reaches the panel, which reverse-proxies file download/upload and
+  // terminal IO to the daemon so the daemon port never needs to be public). Hot-reload, no restart.
+  dataPlane: "direct" | "proxy" = "direct";
+
+  // Symmetric HMAC secret used to sign browser-facing proxy data-plane tokens (panel self-signs
+  // and self-verifies; never shared with the daemon). Generated lazily on first use and persisted.
+  gatewaySecret = "";
+
   // Whether to allow cross-domain requests
   crossDomain: boolean = false;
 
@@ -110,6 +119,10 @@ export default class SystemConfig {
   ssoClientSecret = "";
   ssoTokenAuthMethod: "auto" | "client_secret_basic" | "client_secret_post" = "auto";
   ssoCallbackUrl = "";
+  // Comma-separated allowlist of hosts allowed to appear in a derived
+  // redirect_uri. Only consulted when ssoCallbackUrl is empty AND
+  // reverseProxyMode is enabled; empty means "trust no request header".
+  ssoAllowedRedirectHosts = "";
 
   // Whether to enable SSL/TLS (HTTPS)
   ssl = false;
@@ -117,4 +130,9 @@ export default class SystemConfig {
   sslPemPath = "";
   // SSL private key file path (.key)
   sslKeyPath = "";
+
+  // ---- Update source (manifest URL for manual self-update) ----
+  // Full URL to a manifest.json describing available updates, e.g.
+  // "https://mcsmanager.com/upgrade/manifest.json". Empty => update info unavailable.
+  updateSourceUrl = "https://mcsmanager.com/upgrade/manifest.json";
 }

@@ -57,6 +57,7 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
       systemConfig.totpDriftToleranceSteps = config.totpDriftToleranceSteps;
     if (config.loginCheckIp != null) systemConfig.loginCheckIp = config.loginCheckIp;
     if (config.forwardType != null) systemConfig.forwardType = Number(config.forwardType);
+    if (config.dataPlane != null) systemConfig.dataPlane = config.dataPlane;
     if (config.dataPort != null) systemConfig.dataPort = Number(config.dataPort);
     if (config.loginInfo != null) systemConfig.loginInfo = String(config.loginInfo);
     if (config.canFileManager != null) systemConfig.canFileManager = Boolean(config.canFileManager);
@@ -68,6 +69,10 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
     if (config.registerCode != null) systemConfig.registerCode = String(config.registerCode);
     if (config.panelId != null) systemConfig.panelId = String(config.panelId);
     if (config.enableApiKey != null) systemConfig.enableApiKey = config.enableApiKey;
+
+    // Update source (panel self-update manifest URL)
+    if (config.updateSourceUrl != null)
+      systemConfig.updateSourceUrl = String(config.updateSourceUrl);
 
     if (config.operationLogEnabled != null)
       systemConfig.operationLogEnabled = config.operationLogEnabled;
@@ -245,10 +250,48 @@ router.put("/setting", permission({ level: ROLE.ADMIN }), async (ctx) => {
     }
     if (config.ssoCallbackUrl != null) {
       const cbUrl = String(config.ssoCallbackUrl);
-      if (cbUrl && !cbUrl.startsWith("https://") && !cbUrl.startsWith("http://")) {
-        throw new Error("SSO Callback URL must use http(s) protocol");
+      if (cbUrl) {
+        if (!cbUrl.startsWith("https://") && !cbUrl.startsWith("http://")) {
+          throw new Error("SSO Callback URL must use http(s) protocol");
+        }
+        let parsed: URL;
+        try {
+          parsed = new URL(cbUrl);
+        } catch {
+          throw new Error("SSO Callback URL is not a valid absolute URL");
+        }
+        if (parsed.search || parsed.hash) {
+          throw new Error("SSO Callback URL must not contain a query string or fragment");
+        }
+        if (!parsed.pathname.endsWith("/api/auth/sso/callback")) {
+          throw new Error("SSO Callback URL must end with /api/auth/sso/callback");
+        }
       }
       systemConfig.ssoCallbackUrl = cbUrl;
+    }
+    if (config.ssoAllowedRedirectHosts != null) {
+      const raw = String(config.ssoAllowedRedirectHosts);
+      const hosts = raw
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+      for (const h of hosts) {
+        let ok = false;
+        try {
+          const u = new URL(`http://${h}`);
+          ok =
+            u.host === h &&
+            u.pathname === "/" &&
+            !u.username &&
+            !u.password &&
+            !u.search &&
+            !u.hash;
+        } catch {
+          ok = false;
+        }
+        if (!ok) throw new Error(`Invalid SSO allowed redirect host: ${h}`);
+      }
+      systemConfig.ssoAllowedRedirectHosts = hosts.join(",");
     }
 
     const diff = diffConfig(systemConfigBefore, JSON.parse(JSON.stringify(systemConfig)));

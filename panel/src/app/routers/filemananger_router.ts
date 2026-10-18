@@ -13,6 +13,8 @@ import { isHaveInstanceByUuid, isTopPermissionByUuid } from "../service/permissi
 import RemoteRequest from "../service/remote_command";
 import RemoteServiceSubsystem from "../service/remote_service";
 import { systemConfig } from "../setting";
+import GatewayToken from "../service/gateway_token";
+import { browserFacingAddr } from "../service/proxy_addr";
 
 const router = new Router({ prefix: "/files" });
 
@@ -22,7 +24,7 @@ router.use(async (ctx, next) => {
   const userUuid = getUserUuid(ctx);
   if (systemConfig?.canFileManager === false && getUserPermission(ctx) < 10) {
     ctx.status = 403;
-    ctx.body = new Error($t("TXT_CODE_router.file.off"));
+    ctx.body = $t("TXT_CODE_router.file.off");
     return;
   }
   if (isHaveInstanceByUuid(userUuid, daemonId, instanceUuid)) {
@@ -48,7 +50,15 @@ router.get(
       const result = await new RemoteRequest(remoteService).request("file/status", {
         instanceUuid
       });
-      if (!isTopPermissionByUuid(getUserUuid(ctx))) delete result.disk;
+      // Host disk enumeration (daemon `file/status` returns `disks`, e.g. the
+      // Windows volume letters) is admin-only information. The old code did
+      // `delete result.disk` (typo) and leaked `disks` to every user. Redact to
+      // an EMPTY ARRAY (not delete) so the frontend `disks: string[]` contract
+      // stays valid and `disks.length` never throws.
+      if (!isTopPermissionByUuid(getUserUuid(ctx))) {
+        delete result.disk;
+        result.disks = [];
+      }
       ctx.body = result;
     } catch (err) {
       ctx.body = err;
@@ -473,6 +483,28 @@ router.all(
       const fileName = String(ctx.query.file_name);
       const remoteService = RemoteServiceSubsystem.getInstance(daemonId);
       if (!remoteService) throw new Error($t("TXT_CODE_dd559000") + ` Daemon ID: ${daemonId}`);
+      operationLogger.log("instance_file_download", {
+        ...getOperationLoggerOperator(ctx),
+        instance_id: instanceUuid,
+        daemon_id: daemonId,
+        instance_name: await getInstanceNameSafely(daemonId, instanceUuid),
+        file: fileName
+      });
+      if (systemConfig?.dataPlane === "proxy") {
+        const token = GatewayToken.issueProxyToken({
+          daemonId,
+          instanceUuid,
+          op: "download",
+          target: fileName,
+          ttlSec: 120
+        });
+        ctx.body = {
+          password: token,
+          addr: browserFacingAddr(ctx),
+          remoteMappings: []
+        };
+        return;
+      }
       const addr = remoteService.config.fullAddr;
       const remoteMappings = remoteService.config.getConvertedRemoteMappings();
       const password = timeUuid();
@@ -483,13 +515,6 @@ router.all(
           fileName,
           instanceUuid
         }
-      });
-      operationLogger.log("instance_file_download", {
-        ...getOperationLoggerOperator(ctx),
-        instance_id: instanceUuid,
-        daemon_id: daemonId,
-        instance_name: await getInstanceNameSafely(daemonId, instanceUuid),
-        file: fileName
       });
       ctx.body = {
         password,
@@ -513,6 +538,27 @@ router.all(
       const uploadDir = String(ctx.query.upload_dir);
       const remoteService = RemoteServiceSubsystem.getInstance(daemonId);
       if (!remoteService) throw new Error($t("TXT_CODE_dd559000") + ` Daemon ID: ${daemonId}`);
+      operationLogger.log("instance_file_upload", {
+        ...getOperationLoggerOperator(ctx),
+        instance_id: instanceUuid,
+        daemon_id: daemonId,
+        instance_name: await getInstanceNameSafely(daemonId, instanceUuid)
+      });
+      if (systemConfig?.dataPlane === "proxy") {
+        const token = GatewayToken.issueProxyToken({
+          daemonId,
+          instanceUuid,
+          op: "upload",
+          target: uploadDir,
+          ttlSec: 120
+        });
+        ctx.body = {
+          password: token,
+          addr: browserFacingAddr(ctx),
+          remoteMappings: []
+        };
+        return;
+      }
       const addr = remoteService.config.fullAddr;
       const remoteMappings = remoteService.config.getConvertedRemoteMappings();
       const password = timeUuid();
@@ -523,12 +569,6 @@ router.all(
           uploadDir,
           instanceUuid
         }
-      });
-      operationLogger.log("instance_file_upload", {
-        ...getOperationLoggerOperator(ctx),
-        instance_id: instanceUuid,
-        daemon_id: daemonId,
-        instance_name: await getInstanceNameSafely(daemonId, instanceUuid)
       });
       ctx.body = {
         password,
